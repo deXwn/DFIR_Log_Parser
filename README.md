@@ -14,13 +14,14 @@ Both tools are started from one launcher and exposed through one landing page.
 3. Parser Capabilities
 4. Folder Structure
 5. Prerequisites
-6. Startup
-7. URLs
-8. Environment Variables
-9. Daily Workflow
-10. Troubleshooting
-11. Operations Notes
-12. Useful Commands
+6. Installation
+7. Startup
+8. URLs
+9. Environment Variables
+10. Daily Workflow
+11. Troubleshooting
+12. Operations Notes
+13. Useful Commands
 
 ## Purpose
 
@@ -158,6 +159,59 @@ Recommended:
 
 - `git`
 - `rg` (ripgrep)
+
+## Installation
+
+Install runtime/build dependencies first, then start the suite.
+
+### 1. Install Rust and Cargo (required)
+
+Use `rustup` (recommended):
+
+```bash
+curl https://sh.rustup.rs -sSf | sh
+source "$HOME/.cargo/env"
+rustc --version
+cargo --version
+```
+
+### 2. Install Node.js and npm (required)
+
+Use Node.js 20 LTS or newer:
+
+```bash
+node --version
+npm --version
+```
+
+### 3. Install system packages (required)
+
+Ubuntu/Debian example:
+
+```bash
+sudo apt update
+sudo apt install -y curl iproute2 python3
+```
+
+### 4. Install frontend dependencies
+
+```bash
+cd apps/EventLogParser/web
+npm ci
+cd ../../..
+```
+
+### 5. Verify required tools
+
+```bash
+bash --version
+cargo --version
+node --version
+npm --version
+python3 --version
+curl --version
+ss --version
+```
 
 ## Startup
 
