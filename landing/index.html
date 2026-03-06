@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DFIR Toolkit</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap");
+
+    :root {
+      --ink: #0f172a;
+      --ink-soft: #334155;
+      --paper: #f8fafc;
+      --line: #cbd5e1;
+      --brand-a: #0ea5a4;
+      --brand-b: #2563eb;
+      --brand-c: #f97316;
+      --card: #ffffffcc;
+      --shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Space Grotesk", "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at -10% -20%, #99f6e4 0%, transparent 45%),
+        radial-gradient(900px 500px at 110% -10%, #bfdbfe 0%, transparent 50%),
+        linear-gradient(180deg, #eef2ff 0%, var(--paper) 55%);
+      padding: 28px 18px 36px;
+    }
+
+    .shell {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+      background: linear-gradient(135deg, #ffffffc8, #ffffffef);
+      border: 1px solid #ffffff;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .hero {
+      padding: clamp(24px, 5vw, 48px);
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -65px;
+      top: -85px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand-a), var(--brand-b));
+      opacity: 0.14;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #0f766e;
+      background: #ccfbf1;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      animation: rise 0.45s ease forwards;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 1.02;
+      max-width: 16ch;
+      animation: rise 0.55s ease forwards;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      color: var(--ink-soft);
+      max-width: 65ch;
+      font-size: clamp(16px, 2.6vw, 19px);
+      animation: rise 0.65s ease forwards;
+    }
+
+    .grid {
+      padding: clamp(18px, 4vw, 30px);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 16px;
+    }
+
+    .tool {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      transform: translateY(10px);
+      opacity: 0;
+      animation: rise 0.45s ease forwards;
+    }
+
+    .tool:nth-child(1) { animation-delay: 0.1s; }
+    .tool:nth-child(2) { animation-delay: 0.2s; }
+
+    .tag {
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .tag-log {
+      color: #1d4ed8;
+      background: #dbeafe;
+      border-color: #93c5fd;
+    }
+
+    .tag-evtx {
+      color: #9a3412;
+      background: #ffedd5;
+      border-color: #fdba74;
+    }
+
+    .tool h2 {
+      margin: 2px 0 0;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .tool p {
+      margin: 0;
+      color: var(--ink-soft);
+      min-height: 56px;
+    }
+
+    .meta {
+      margin-top: 2px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+    }
+
+    .meta span {
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #1e293b;
+      background: #f8fafc;
+    }
+
+    .btn {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: fit-content;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 11px 16px;
+      border-radius: 12px;
+      transition: transform .16s ease, filter .16s ease;
+      will-change: transform;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: saturate(1.08);
+    }
+
+    .btn-log {
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    }
+
+    .btn-evtx {
+      background: linear-gradient(135deg, #ea580c, #f97316);
+    }
+
+    .foot {
+      padding: 14px 24px 22px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .foot code {
+      background: #e2e8f0;
+      color: #0f172a;
+      border-radius: 8px;
+      padding: 2px 8px;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <span class="eyebrow">Unified Workspace</span>
+      <h1>DFIR Toolkit Command Center</h1>
+      <p class="subtitle">
+        Launch the right workflow in one click. Choose your parser and continue
+        in the same tab.
+      </p>
+    </section>
+
+    <section class="grid">
+      <article class="tool">
+        <span class="tag tag-log">Text Log Pipeline</span>
+        <h2>Log Parser</h2>
+        <p>
+          Search large plain-text logs, run rule-based detections, and export
+          investigation results quickly.
+        </p>
+        <div class="meta">
+          <span>Port 8800</span>
+          <span>Detection Rules</span>
+          <span>CSV Export</span>
+        </div>
+        <a class="btn btn-log" href="http://localhost:8800">Open Log Parser</a>
+      </article>
+
+      <article class="tool">
+        <span class="tag tag-evtx">Windows Event Pipeline</span>
+        <h2>Event Log Parser</h2>
+        <p>
+          Ingest EVTX data, pivot through timeline and detections, and build
+          report-ready event context.
+        </p>
+        <div class="meta">
+          <span>Port 3000</span>
+          <span>EVTX Ingest</span>
+          <span>Timeline + Reports</span>
+        </div>
+        <a class="btn btn-evtx" href="http://localhost:3000">Open Event Parser</a>
+      </article>
+    </section>
+
+    <footer class="foot">
+      <span>Landing URL: <code>http://localhost:8899</code></span>
+      <span>Backend APIs: <code>8080</code> and <code>8800</code></span>
+    </footer>
+  </main>
+</body>
+</html>

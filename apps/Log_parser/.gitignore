@@ -1,0 +1,15 @@
+target/
+exports/*
+!exports/.gitkeep
+exports_local/*
+!exports_local/.gitkeep
+log/*
+!log/.gitkeep
+logs/
+**/.DS_Store
+node_modules/
+.vscode/
+.idea/
+*.tmp
+*.swp
+*.sqlite

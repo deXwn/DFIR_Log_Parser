@@ -1,0 +1,1362 @@
+
+
+- id: suspicious-logon-ip
+  name: Suspicious Logon from Known Bad IP
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1078 - Valid Accounts"]
+  event_id: [4624, 4625]
+  ip: ["1.2.3.4", "5.6.7.8"]
+
+- id: lolbin-process
+  name: LOLBin Process Start
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1218 - System Binary Proxy Execution", "T1059 - Command and Scripting Interpreter"]
+  event_id: [4688]
+  process_name: ["cmd.exe", "wmic.exe", "certutil.exe", "bitsadmin.exe"]
+  process_cmdline_regex: "(?i)(invoke-|downloadstring|http[s]?://|/transfer|decode|urlcache)"
+
+- id: event-log-cleared
+  name: Event Log Cleared
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1070.001 - Clear Windows Event Logs"]
+  event_id: [1102]
+  channel: ["Security"]
+
+- id: new-service-created
+  name: New Service Created
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1543.003 - Windows Service"]
+  event_id: [7045]
+  channel: ["System"]
+
+- id: scheduled-task-created-updated
+  name: Scheduled Task Created or Updated
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1053.005 - Scheduled Task"]
+  event_id: [4698, 4702]
+  channel: ["Security"]
+
+- id: user-added-to-privileged-group
+  name: User Added to Privileged Group
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1098 - Account Manipulation"]
+  event_id: [4728, 4732, 4756]
+  channel: ["Security"]
+
+- id: rdp-logon-type-10
+  name: Remote Desktop Logon (Type 10)
+  description: "Detection rule description."
+  severity: medium  # FIXED: "low" -> "medium"
+  mitre: ["T1021.001 - Remote Desktop Protocol"]
+  event_id: [4624]
+  logon_type: [10]
+
+- id: scheduled-task-lifecycle-security
+  name: Scheduled Task Lifecycle Changes
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1053.005 - Scheduled Task"]
+  event_id: [4698, 4699, 4700, 4701, 4702]
+  channel: ["Security"]
+
+- id: scheduled-task-tool-execution
+  name: Scheduled Task Tool Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1053.005 - Scheduled Task"]
+  event_id: [4688]
+  process_name: ["schtasks.exe", "at.exe"]
+
+- id: powershell-script-block-logging
+  name: PowerShell Script Block Activity
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1059.001 - PowerShell"]
+  event_id: [4103, 4104]
+  channel: ["Microsoft-Windows-PowerShell/Operational"]
+
+- id: powershell-process-execution
+  name: PowerShell Process Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1059.001 - PowerShell"]
+  event_id: [4688]
+  process_name: ["powershell.exe", "pwsh.exe", "powershell_ise.exe"]
+  process_cmdline_regex: "(?i)(-enc|-nop|-w\\s+hidden|-exec\\s+bypass|iex|invoke-expression|downloadstring|webclient)"
+
+- id: event-log-manipulation-utilities
+  name: Event Log Manipulation Utilities
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1070.001 - Clear Windows Event Logs"]
+  event_id: [4688]
+  process_name: ["wevtutil.exe"]
+
+- id: audit-policy-tampering-utility
+  name: Audit Policy Tampering Utility
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.002 - Disable Windows Event Logging"]
+  event_id: [4688]
+  process_name: ["auditpol.exe"]
+
+- id: security-log-full
+  name: Security Log Full
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1562.002 - Disable Windows Event Logging"]
+  event_id: [1104]
+  channel: ["Security"]
+
+- id: eventlog-service-stop-commands
+  name: Event Log Service Stop/Control Commands
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.002 - Disable Windows Event Logging"]
+  event_id: [4688]
+  process_name: ["sc.exe", "net.exe", "net1.exe"]
+  process_cmdline_regex: "(?i)(stop|delete|config)\\s+(eventlog|wecsvc|wevtsvc)"
+
+- id: logging-agent-tampering-tools
+  name: Logging Agent Tampering Tools
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1562 - Impair Defenses"]
+  event_id: [4688]
+  process_name: ["taskkill.exe"]
+
+- id: logging-agent-tampering-powershell
+  name: Logging Agent Tampering via PowerShell
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1562 - Impair Defenses"]
+  event_id: [4688]
+  process_name: ["powershell.exe", "pwsh.exe"]
+  process_cmdline_regex: "(?i)(stop-service|stop-process|kill).*?(sysmon|splunk|nxlog|elastic|winlogbeat|auditbeat|mma|oms)"
+
+- id: explicit-credentials-used
+  name: Explicit Credentials Used
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1078 - Valid Accounts", "T1550.002 - Pass the Hash"]
+  event_id: [4648]
+  channel: ["Security"]
+
+- id: special-privileges-assigned
+  name: Special Privileges Assigned to New Logon
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1134 - Access Token Manipulation"]
+  event_id: [4672]
+  channel: ["Security"]
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+    - "NT AUTHORITY\\LOCAL SERVICE"
+    - "LOCAL SERVICE"
+    - "NT AUTHORITY\\NETWORK SERVICE"
+    - "NETWORK SERVICE"
+
+- id: audit-policy-changed
+  name: Audit Policy Changed
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.002 - Disable Windows Event Logging"]
+  event_id: [4719]
+  channel: ["Security"]
+
+- id: system-time-changed
+  name: System Time Changed
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1070.006 - Timestomp"]
+  event_id: [4616]
+  channel: ["Security"]
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+    - "NT AUTHORITY\\LOCAL SERVICE"
+    - "LOCAL SERVICE"
+    - "NT AUTHORITY\\NETWORK SERVICE"
+    - "NETWORK SERVICE"
+
+- id: event-log-service-shutdown
+  name: Event Log Service Shutdown
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.002 - Disable Windows Event Logging"]
+  event_id: [1100]
+  channel: ["Security"]
+
+- id: account-created
+  name: User Account Created
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1136 - Create Account"]
+  event_id: [4720]
+  channel: ["Security"]
+
+- id: account-enabled
+  name: User Account Enabled
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1098 - Account Manipulation"]
+  event_id: [4722]
+  channel: ["Security"]
+
+- id: account-password-reset
+  name: Account Password Reset Attempt
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1098 - Account Manipulation"]
+  event_id: [4724]
+  channel: ["Security"]
+
+- id: account-disabled-or-deleted
+  name: Account Disabled or Deleted
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1531 - Account Access Removal"]
+  event_id: [4725, 4726]
+  channel: ["Security"]
+
+- id: account-lockout
+  name: Account Lockout
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1110 - Brute Force"]
+  event_id: [4740]
+  channel: ["Security"]
+
+- id: privileged-group-member-removed
+  name: Member Removed from Privileged Group
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1098 - Account Manipulation"]
+  event_id: [4729, 4733, 4757]
+  channel: ["Security"]
+
+- id: service-installed-security
+  name: Service Installed (Security Log)
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1543.003 - Windows Service"]
+  event_id: [4697]
+  channel: ["Security"]
+
+- id: shadow-copy-deletion-tools
+  name: Shadow Copy / Backup Deletion Tools
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1490 - Inhibit System Recovery"]
+  event_id: [4688]
+  process_name: ["vssadmin.exe", "wbadmin.exe", "bcdedit.exe", "reagentc.exe"]
+  process_cmdline_regex: "(?i)(delete|shadows|resize|shadowstorage|off|recoveryenabled)"
+
+- id: remote-execution-tooling
+  name: Remote Execution Tooling
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1021 - Remote Services", "T1569 - System Services"]
+  event_id: [4688]
+  process_name: ["psexec.exe", "winrs.exe", "sc.exe", "at.exe"]
+
+- id: defense-evasion-network-tamper
+  name: Network/Firewall Tampering Tools
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1562.004 - Disable or Modify System Firewall"]
+  event_id: [4688]
+  process_name: ["netsh.exe", "route.exe"]
+  process_cmdline_regex: "(?i)(firewall|advfirewall|set|add|delete|disable|block|allow)"
+
+- id: script-host-execution
+  name: Script Host Execution
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1218 - System Binary Proxy Execution", "T1059.005 - Visual Basic"]
+  event_id: [4688]
+  process_name: ["wscript.exe", "cscript.exe", "mshta.exe", "rundll32.exe"]
+
+- id: archive-and-staging-tools
+  name: Archive and Staging Tools
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1560 - Archive Collected Data"]
+  event_id: [4688]
+  process_name: ["7z.exe", "7za.exe", "rar.exe", "winrar.exe", "tar.exe"]
+
+
+
+- id: lsass-memory-access-tools
+  name: LSASS Memory Access Tools
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.001 - LSASS Memory"]
+  event_id: [4688]
+  process_name: ["mimikatz.exe", "wce.exe", "pwdump.exe", "fgdump.exe", "procdump.exe"]
+  process_cmdline_regex: "(?i)(lsass|sekurlsa|logonpasswords|dcsync|ntlm|wdigest)"
+
+- id: lsass-process-dump-cmdline
+  name: LSASS Dump via Command Line
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.001 - LSASS Memory"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(comsvcs\\.dll.*minidump|procdump.*lsass|rundll32.*MiniDump|Out-Minidump)"
+
+- id: registry-sam-hive-access
+  name: SAM/SYSTEM/SECURITY Hive Dump
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.002 - Security Account Manager"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(reg\\s+save|reg\\s+export).*(sam|system|security)"
+
+- id: ntds-dit-access
+  name: NTDS.dit Access Attempt
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.003 - NTDS"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(ntds\\.dit|ntdsutil|ifm|activate\\s+instance\\s+ntds)"
+
+
+
+- id: wmic-remote-execution
+  name: WMIC Remote Process Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1047 - Windows Management Instrumentation"]
+  event_id: [4688]
+  process_name: ["wmic.exe"]
+  process_cmdline_regex: "(?i)(process\\s+call\\s+create|/node:|shadowcopy|delete)"
+
+- id: wmi-persistence-subscription
+  name: WMI Event Subscription (Persistence)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1546.003 - WMI Event Subscription"]
+  event_id: [4688]
+  process_name: ["wmic.exe", "powershell.exe", "pwsh.exe"]
+  process_cmdline_regex: "(?i)(EventFilter|EventConsumer|FilterToConsumerBinding|__EventFilter|CommandLineEventConsumer|ActiveScriptEventConsumer)"
+
+
+
+- id: registry-run-key-modification
+  name: Registry Run Key Modification
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1547.001 - Registry Run Keys / Startup Folder"]
+  event_id: [4688]
+  process_name: ["reg.exe"]
+  process_cmdline_regex: "(?i)(add|delete).*(Run|RunOnce|RunServices|RunServicesOnce|Winlogon|Shell|Userinit)"
+
+- id: registry-security-tamper
+  name: Registry Security Policy Tampering
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1112 - Modify Registry", "T1562.001 - Disable or Modify Tools"]
+  event_id: [4688]
+  process_name: ["reg.exe"]
+  process_cmdline_regex: "(?i)(EnableLUA|ConsentPromptBehavior|DisableAntiSpyware|DisableRealtimeMonitoring|DisableBehaviorMonitoring|SafeBoot)"
+
+- id: registry-hidden-key-creation
+  name: Hidden Registry Key Creation
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1112 - Modify Registry"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(reg\\s+add).*(\\\\0|\\x00|\\u0000)"
+
+
+
+- id: network-discovery-commands
+  name: Network Discovery Commands
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1018 - Remote System Discovery", "T1046 - Network Service Scanning"]
+  event_id: [4688]
+  process_name: ["net.exe", "net1.exe", "nltest.exe", "nbtstat.exe", "arp.exe"]
+  process_cmdline_regex: "(?i)(view|group|localgroup|user|share|session|dclist|domain_trusts|/domain)"
+
+- id: system-info-discovery
+  name: System Information Discovery
+  description: "Detection rule description."
+  severity: low
+  mitre: ["T1082 - System Information Discovery"]
+  event_id: [4688]
+  process_name: ["systeminfo.exe", "hostname.exe", "whoami.exe", "ipconfig.exe"]
+  process_cmdline_regex: "(?i)(all|/all|/priv|/groups|/logonid)"
+
+- id: process-and-service-discovery
+  name: Process and Service Discovery
+  description: "Detection rule description."
+  severity: low
+  mitre: ["T1057 - Process Discovery", "T1007 - System Service Discovery"]
+  event_id: [4688]
+  process_name: ["tasklist.exe", "sc.exe", "net.exe"]
+  process_cmdline_regex: "(?i)(query|/svc|qc|list|running)"
+
+- id: security-software-discovery
+  name: Security Software Discovery
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1518.001 - Security Software Discovery"]
+  event_id: [4688]
+  process_name: ["tasklist.exe", "sc.exe", "wmic.exe", "powershell.exe"]
+  process_cmdline_regex: "(?i)(defender|antivirus|kaspersky|symantec|mcafee|carbon.?black|crowdstrike|sentinel|cylance|sophos|trend|eset)"
+
+- id: file-and-directory-discovery
+  name: File and Directory Discovery
+  description: "Detection rule description."
+  severity: low
+  mitre: ["T1083 - File and Directory Discovery"]
+  event_id: [4688]
+  process_name: ["dir.exe", "tree.exe", "where.exe", "findstr.exe"]
+  process_cmdline_regex: "(?i)(\\.kdbx|\\.pem|\\.pfx|\\.key|\\.conf|password|secret|credential|wallet|\\.ssh)"
+
+
+
+- id: smb-admin-share-access
+  name: Admin Share Access (C$, ADMIN$, IPC$)
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1021.002 - SMB/Windows Admin Shares"]
+  event_id: [5140]
+  share_name_regex: "(?i)(C\\$|ADMIN\\$|IPC\\$)"
+
+- id: network-logon-type-3
+  name: Network Logon (Type 3) from External Source
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1021 - Remote Services"]
+  event_id: [4624]
+  logon_type: [3]
+  exclude_user:
+    - "NT AUTHORITY\\ANONYMOUS LOGON"
+
+- id: pass-the-hash-indicator
+  name: Pass-the-Hash Indicator
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1550.002 - Pass the Hash"]
+  event_id: [4624]
+  logon_type: [3]
+  auth_package_regex: "(?i)NTLM"
+  workstation_name_regex: "^.{0,1}$"
+  exclude_user:                        # added
+    - "ANONYMOUS LOGON"
+    - "NT AUTHORITY\\ANONYMOUS LOGON"
+
+
+
+- id: binary-renamed-lolbin
+  name: Renamed LOLBin Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1036.003 - Rename System Utilities"]
+  event_id: [4688]
+  process_original_name_regex: "(?i)(powershell\\.exe|cmd\\.exe|mshta\\.exe|wscript\\.exe|cscript\\.exe)"
+
+- id: applocker-bypass-tools
+  name: AppLocker / WDAC Bypass Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218 - System Binary Proxy Execution"]
+  event_id: [4688]
+  process_name: ["regsvr32.exe", "regasm.exe", "regsvcs.exe", "installutil.exe", "msiexec.exe", "ieexec.exe"]
+  process_cmdline_regex: "(?i)(http[s]?://|scrobj\\.dll|/i:|/u)"
+
+- id: alternate-data-stream-execution
+  name: Alternate Data Stream (ADS) Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1564.004 - NTFS File Attributes"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(:\\w+\\.exe|wscript.*:.*\\.js|powershell.*:.*\\.ps1)"
+
+- id: process-injection-tools
+  name: Process Injection Indicator Tools
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1055 - Process Injection"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(VirtualAlloc|WriteProcessMemory|CreateRemoteThread|NtQueueApcThread|SetThreadContext|SuspendThread|inject)"
+
+- id: timestomp-indicator
+  name: Timestomping Indicator
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1070.006 - Timestomp"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(timestomp|touch\\.exe|attrib.*-|SetFileTime)"
+
+- id: disable-windows-defender
+  name: Windows Defender Disabled or Tampered
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.001 - Disable or Modify Tools"]
+  event_id: [4688]
+  process_name: ["powershell.exe", "pwsh.exe", "reg.exe"]
+  process_cmdline_regex: "(?i)(Set-MpPreference.*Disable|Add-MpPreference.*Exclusion|DisableRealtimeMonitoring|DisableBehaviorMonitoring|DisableIOAVProtection|DisableScriptScanning)"
+
+
+
+- id: dns-exfil-tools
+  name: DNS / Network Exfiltration Tools
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1048 - Exfiltration Over Alternative Protocol"]
+  event_id: [4688]
+  process_name: ["nslookup.exe", "dig.exe", "dnscmd.exe"]
+  process_cmdline_regex: "(?i)(txt|any|\\-q=txt|type=txt)"
+
+- id: web-download-tools
+  name: Web Download via LOLBins
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1105 - Ingress Tool Transfer"]
+  event_id: [4688]
+  process_name: ["certutil.exe", "bitsadmin.exe", "powershell.exe", "pwsh.exe", "curl.exe", "wget.exe"]
+  process_cmdline_regex: "(?i)(urlcache|/transfer|downloadstring|downloadfile|webclient|invoke-webrequest|iwr|curl|wget).*(http[s]?://)"
+
+- id: c2-beacon-tool-names
+  name: Known C2 Framework Tool Names
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1071 - Application Layer Protocol"]
+  event_id: [4688]
+  process_name_regex: "(?i)(beacon\\.exe|cobaltstrike|cs\\.exe|havoc\\.exe|sliver|brute\\.exe|merlin\\.exe|covenant)"
+
+
+
+- id: ransomware-file-extension-creation
+  name: Ransomware Extension Pattern (Mass File Change)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1486 - Data Encrypted for Impact"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(ren|rename|move|copy).*(\\.[a-z0-9]{4,8}\\s)"
+
+- id: volume-shadow-delete
+  name: Volume Shadow Copy Deletion
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1490 - Inhibit System Recovery"]
+  event_id: [4688]
+  process_name: ["vssadmin.exe", "wmic.exe", "powershell.exe"]
+  process_cmdline_regex: "(?i)(delete\\s+shadows|shadowcopy.*delete|resize\\s+shadowstorage|DeleteShadowCopies)"
+
+- id: boot-recovery-disabled
+  name: Boot Recovery / Safe Mode Disabled
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1490 - Inhibit System Recovery"]
+  event_id: [4688]
+  process_name: ["bcdedit.exe"]
+  process_cmdline_regex: "(?i)(recoveryenabled\\s+no|bootstatuspolicy\\s+ignoreallfailures|safeboot)"
+
+
+
+- id: powershell-encoded-command
+  name: PowerShell Encoded Command Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1059.001 - PowerShell", "T1027 - Obfuscated Files or Information"]
+  event_id: [4688]
+  process_name: ["powershell.exe", "pwsh.exe"]
+  process_cmdline_regex: "(?i)(-e\\s+[A-Za-z0-9+/]{50,}|-en\\s+|-enc\\s+|-enco)"
+
+- id: powershell-download-cradle
+  name: PowerShell Download Cradle
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1059.001 - PowerShell", "T1105 - Ingress Tool Transfer"]
+  event_id: [4688, 4103, 4104]
+  process_cmdline_regex: "(?i)(iex|invoke-expression)\\s*\\(.*?(new-object|webclient|downloadstring|downloadfile)"
+
+- id: powershell-reflection-amsi-bypass
+  name: PowerShell AMSI Bypass Attempt
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.001 - Disable or Modify Tools"]
+  event_id: [4103, 4104]
+  channel: ["Microsoft-Windows-PowerShell/Operational"]
+  script_block_regex: "(?i)(amsi|AmsiScanBuffer|amsiInitFailed|AmsiUtils|amsiContext|Reflection\\.Assembly.*load)"
+
+- id: powershell-constrained-language-bypass
+  name: PowerShell Constrained Language Mode Bypass
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1059.001 - PowerShell"]
+  event_id: [4103, 4104]
+  channel: ["Microsoft-Windows-PowerShell/Operational"]
+  script_block_regex: "(?i)(__PSLockDownPolicy|FullLanguage|ExecutionContext\\.SessionState\\.LanguageMode)"
+
+
+- id: kerberoasting-spn-request
+  name: Kerberoasting - SPN Ticket Request
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1558.003 - Kerberoasting"]
+  event_id: [4769]
+  channel: ["Security"]
+  ticket_encryption_regex: "0x17|0x18"
+  failure_code_regex: "0x0"
+  exclude_user:
+    - "ANONYMOUS LOGON"
+    - "NT AUTHORITY\\SYSTEM"
+
+- id: asrep-roasting-preauth-disabled
+  name: AS-REP Roasting - Pre-Auth Disabled Account
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1558.004 - AS-REP Roasting"]
+  event_id: [4768]
+  channel: ["Security"]
+  ticket_encryption_regex: "0x17"
+  pre_auth_type_regex: "0x0"
+
+- id: golden-ticket-indicator
+  name: Golden Ticket Usage Indicator
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1558.001 - Golden Ticket"]
+  event_id: [4624, 4672]
+  channel: ["Security"]
+  logon_type: [3, 9]
+  auth_package_regex: "(?i)Kerberos"
+  logon_guid_regex: "^00000000-0000-0000-0000-000000000000$"
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "ANONYMOUS LOGON"
+
+- id: silver-ticket-indicator
+  name: Silver Ticket Usage Indicator
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1558.002 - Silver Ticket"]
+  event_id: [4624]
+  channel: ["Security"]
+  auth_package_regex: "(?i)Kerberos"
+  target_domain_name_regex: "^(-|\\s*)$"
+  logon_type: [3]
+
+- id: overpass-the-hash
+  name: Overpass-the-Hash (Pass-the-Key)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1550.002 - Pass the Hash"]
+  event_id: [4768]
+  channel: ["Security"]
+  ticket_encryption_regex: "0x17"
+  ip_address_regex: "^(?!127\\.0\\.0\\.1)(?!::1).+"
+
+- id: kerberos-ticket-anomaly
+  name: Excessive Kerberos Ticket Requests
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1558.003 - Kerberoasting"]
+  event_id: [4769]
+  channel: ["Security"]
+  failure_code_regex: "0x0"
+
+
+
+- id: dcsync-replication-rights
+  name: DCSync Attack - Directory Replication
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.006 - DCSync"]
+  event_id: [4662]
+  channel: ["Security"]
+  properties_regex: "(?i)(1131f6aa-9c07-11d1-f79f-00c04fc2dcd2|1131f6ad-9c07-11d1-f79f-00c04fc2dcd2|89e95b76-444d-4c62-991a-0facbeda640c)"
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+
+- id: domain-controller-access-non-dc
+  name: Sensitive DC Object Access from Non-DC
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1003.006 - DCSync"]
+  event_id: [4662]
+  channel: ["Security"]
+  object_name_regex: "(?i)(krbtgt|AdminSDHolder|SYSVOL|NTDS)"
+
+- id: ad-object-creation-sensitive
+  name: Sensitive AD Object Created
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1136.002 - Domain Account"]
+  event_id: [5137]
+  channel: ["Security"]
+  object_dn_regex: "(?i)(OU=Domain Controllers|CN=Admins|CN=Schema|CN=Policies)"
+
+
+
+- id: token-impersonation-seimpersonate
+  name: Token Impersonation via SeImpersonatePrivilege
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1134.001 - Token Impersonation/Theft"]
+  event_id: [4672]
+  channel: ["Security"]
+  privilege_list_regex: "(?i)(SeImpersonatePrivilege|SeAssignPrimaryTokenPrivilege|SeTcbPrivilege|SeCreateTokenPrivilege)"
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+    - "NT AUTHORITY\\NETWORK SERVICE"
+    - "NETWORK SERVICE"
+    - "NT AUTHORITY\\LOCAL SERVICE"
+    - "LOCAL SERVICE"
+
+- id: sensitive-privilege-use
+  name: Sensitive Privilege Use (4673)
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1134 - Access Token Manipulation"]
+  event_id: [4673]
+  channel: ["Security"]
+  privilege_name_regex: "(?i)(SeDebugPrivilege|SeTakeOwnershipPrivilege|SeLoadDriverPrivilege|SeRestorePrivilege|SeBackupPrivilege)"
+  exclude_user:
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+
+
+
+- id: uac-bypass-fodhelper
+  name: UAC Bypass via fodhelper.exe
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1548.002 - Bypass User Account Control"]
+  event_id: [4688]
+  process_name: ["fodhelper.exe"]
+  parent_process_regex: "(?i)(cmd\\.exe|powershell\\.exe|wscript\\.exe|cscript\\.exe)"
+
+- id: uac-bypass-eventvwr
+  name: UAC Bypass via eventvwr.exe
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1548.002 - Bypass User Account Control"]
+  event_id: [4688]
+  process_name: ["eventvwr.exe"]
+  process_cmdline_regex: "(?i)(msc|cmd|powershell|wscript)"
+
+- id: uac-bypass-sdclt
+  name: UAC Bypass via sdclt.exe
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1548.002 - Bypass User Account Control"]
+  event_id: [4688]
+  process_name: ["sdclt.exe"]
+  process_cmdline_regex: "(?i)(/kickoffelev|/blastoff)"
+
+- id: uac-bypass-cmstp
+  name: UAC Bypass / AppLocker Bypass via cmstp.exe
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1548.002 - Bypass User Account Control", "T1218.003 - CMSTP"]
+  event_id: [4688]
+  process_name: ["cmstp.exe"]
+  process_cmdline_regex: "(?i)(\\.inf|/s|/ns|/au)"
+
+
+
+- id: dll-search-order-hijack-paths
+  name: DLL Hijacking - Suspicious Write to System Path
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1574.001 - DLL Search Order Hijacking"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(copy|move|xcopy|robocopy).*(version\\.dll|wlbsctrl\\.dll|cryptbase\\.dll|comctl32\\.dll|dwmapi\\.dll|winhttp\\.dll)"
+
+- id: dll-side-loading-signed-binary
+  name: DLL Side-Loading via Signed Binary
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1574.002 - DLL Side-Loading"]
+  event_id: [4688]
+  process_name: ["OneDriveSetup.exe", "Teams.exe", "MicrosoftEdgeUpdate.exe"]
+  process_cmdline_regex: "(?i)(\\\\Users\\\\|\\\\Temp\\\\|\\\\AppData\\\\)"
+
+
+
+- id: com-object-hijack
+  name: COM Object Hijacking via HKCU
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1546.015 - Component Object Model Hijacking"]
+  event_id: [4688]
+  process_name: ["reg.exe"]
+  process_cmdline_regex: "(?i)HKCU.*Classes.*CLSID"
+
+- id: screensaver-persistence
+  name: Screensaver-Based Persistence
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1546.002 - Screensaver"]
+  event_id: [4688]
+  process_name: ["reg.exe"]
+  process_cmdline_regex: "(?i)(SCRNSAVE\\.EXE|\\.scr.*Windows\\\\System)"
+
+- id: netsh-helper-dll-persistence
+  name: Netsh Helper DLL Persistence
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1546.007 - Netsh Helper DLL"]
+  event_id: [4688]
+  process_name: ["netsh.exe"]
+  process_cmdline_regex: "(?i)(add\\s+helper|advfirewall.*dll)"
+
+- id: image-file-execution-options
+  name: Image File Execution Options Injection (IFEO)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1546.012 - Image File Execution Options Injection"]
+  event_id: [4688]
+  process_name: ["reg.exe"]
+  process_cmdline_regex: "(?i)Image File Execution Options.*Debugger"
+
+- id: accessibility-feature-backdoor
+  name: Accessibility Feature Backdoor (Sticky Keys etc.)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1546.008 - Accessibility Features"]
+  event_id: [4688]
+  process_cmdline_regex: "(?i)(copy|move|ren).*(sethc|utilman|osk|narrator|magnify|displayswitch).*(\\.exe)"
+
+
+
+- id: certutil-decode-download
+  name: Certutil Encode/Decode or Download
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1140 - Deobfuscate/Decode Files", "T1105 - Ingress Tool Transfer"]
+  event_id: [4688]
+  process_name: ["certutil.exe"]
+  process_cmdline_regex: "(?i)(-decode|-encode|-urlcache|-f\\s+http|-ping)"
+
+- id: msiexec-remote-payload
+  name: MSIExec Remote Payload Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218.007 - Msiexec"]
+  event_id: [4688]
+  process_name: ["msiexec.exe"]
+  process_cmdline_regex: "(?i)(/i|/q|/quiet).*(http[s]?://|\\\\\\\\)"
+
+- id: regsvr32-squiblydoo
+  name: Regsvr32 Squiblydoo (AppLocker Bypass)
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1218.010 - Regsvr32"]
+  event_id: [4688]
+  process_name: ["regsvr32.exe"]
+  process_cmdline_regex: "(?i)(/s|/n|/u|/i).*(http[s]?://|scrobj\\.dll)"
+
+- id: xwizard-dll-execution
+  name: xwizard.exe DLL Execution (Proxy)
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218 - System Binary Proxy Execution"]
+  event_id: [4688]
+  process_name: ["xwizard.exe"]
+  process_cmdline_regex: "(?i)(RunWizard|\\{)"
+
+- id: pcalua-arbitrary-execution
+  name: pcalua.exe Arbitrary Command Execution
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1218 - System Binary Proxy Execution"]
+  event_id: [4688]
+  process_name: ["pcalua.exe"]
+  process_cmdline_regex: "(?i)(-a\\s+)"
+
+- id: forfiles-command-execution
+  name: forfiles.exe Command Execution (LOLBin)
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1059.003 - Windows Command Shell"]
+  event_id: [4688]
+  process_name: ["forfiles.exe"]
+  process_cmdline_regex: "(?i)/c\\s+(cmd|powershell|wscript|mshta)"
+
+- id: msdeploy-arbitrary-execution
+  name: MSDeploy Arbitrary Code Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218 - System Binary Proxy Execution"]
+  event_id: [4688]
+  process_name: ["msdeploy.exe"]
+  process_cmdline_regex: "(?i)(-verb|runcommand|source:runcommand)"
+
+- id: odbcconf-dll-load
+  name: odbcconf.exe DLL Load
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218.008 - Odbcconf"]
+  event_id: [4688]
+  process_name: ["odbcconf.exe"]
+  process_cmdline_regex: "(?i)(REGSVR|/a|/f)"
+
+
+
+- id: port-scanning-tools
+  name: Port Scanning / Network Enumeration Tools
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1046 - Network Service Scanning"]
+  event_id: [4688]
+  process_name: ["nmap.exe", "masscan.exe", "zmap.exe", "angry_ip.exe", "advanced_ip_scanner.exe"]
+
+- id: ad-enumeration-tools
+  name: Active Directory Enumeration Tools
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1087.002 - Domain Account Discovery", "T1069.002 - Domain Groups"]
+  event_id: [4688]
+  process_name_regex: "(?i)(sharphound|bloodhound|adfind|adrecon|powerview|ldapdomaindump|pingcastle)"
+
+- id: ldap-enumeration-cmdline
+  name: LDAP Enumeration via Command Line
+  description: "Detection rule description."
+  severity: medium
+  mitre: ["T1087 - Account Discovery"]
+  event_id: [4688]
+  process_name: ["powershell.exe", "pwsh.exe"]
+  process_cmdline_regex: "(?i)(Get-ADUser|Get-ADGroup|Get-ADComputer|Get-DomainUser|Get-DomainGroup|Get-DomainGPO|Invoke-ACLScanner|Find-LocalAdminAccess)"
+
+- id: password-spray-indicator
+  name: Password Spray Tool Execution
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1110.003 - Password Spraying"]
+  event_id: [4688]
+  process_name_regex: "(?i)(spray|kerbrute|ruler\\.exe|spraycharles|domainpasswordspray)"
+
+
+
+- id: dotnet-load-from-memory
+  name: .NET Assembly Loaded from Memory
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1620 - Reflective Code Loading"]
+  event_id: [4103, 4104]
+  channel: ["Microsoft-Windows-PowerShell/Operational"]
+  script_block_regex: "(?i)(\\[System\\.Reflection\\.Assembly\\]|Assembly::Load|LoadFrom|LoadFile|load\\(\\[Convert\\])"
+
+- id: lolbas-compile-csharp
+  name: In-Memory C# Compilation via csc.exe/msbuild.exe
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1127.001 - MSBuild"]
+  event_id: [4688]
+  process_name: ["msbuild.exe", "csc.exe"]
+  process_cmdline_regex: "(?i)(\\\\Temp\\\\|\\\\AppData\\\\|http[s]?://|\\.csproj|\\.xml)"
+
+- id: powershell-runspace-evasion
+  name: PowerShell Runspace / Custom Host Evasion
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1059.001 - PowerShell"]
+  event_id: [4103, 4104]
+  channel: ["Microsoft-Windows-PowerShell/Operational"]
+  script_block_regex: "(?i)(RunspaceFactory|CreateRunspace|InitialSessionState|PSHost|DefaultRunspace)"
+
+
+
+- id: rclone-cloud-exfil
+  name: Rclone Cloud Exfiltration Tool
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1567.002 - Exfiltration to Cloud Storage"]
+  event_id: [4688]
+  process_name_regex: "(?i)(rclone\\.exe|rclone)"
+  process_cmdline_regex: "(?i)(copy|sync|move).*(mega|drive|s3|dropbox|onedrive|sftp)"
+
+- id: mega-sync-client
+  name: MEGA Sync Client Execution
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1567.002 - Exfiltration to Cloud Storage"]
+  event_id: [4688]
+  process_name_regex: "(?i)(MEGAcmd|MEGAsync|megaclient)"
+
+- id: data-staged-to-unusual-path
+  name: Data Staged to Unusual Directory
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1074 - Data Staged"]
+  event_id: [4688]
+  process_name: ["xcopy.exe", "robocopy.exe", "copy", "7z.exe", "rar.exe"]
+  process_cmdline_regex: "(?i)(\\\\Temp\\\\|\\\\Recycle|\\\\\\$Recycle|\\\\ProgramData\\\\[^M]|\\\\Users\\\\Public\\\\)"
+
+
+
+
+- id: corr-recon-then-lateral
+  name: "[CORR] Discovery Followed by Lateral Movement"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1018 - Remote System Discovery", "T1021 - Remote Services"]
+  correlation:
+    type: sequence
+    window: 300
+    group_by: [host, user]
+    steps:
+      - step: 1
+        name: recon
+        event_id: [4688]
+        process_name: ["net.exe", "net1.exe", "nltest.exe", "nbtstat.exe", "ping.exe", "arp.exe", "systeminfo.exe"]
+      - step: 2
+        name: lateral_move
+        event_id: [4624]
+        logon_type: [3, 10]
+        exclude_user: ["ANONYMOUS LOGON", "NT AUTHORITY\\SYSTEM"]
+
+- id: corr-lolbin-then-download
+  name: "[CORR] LOLBin Execution Followed by File Download"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1218 - System Binary Proxy Execution", "T1105 - Ingress Tool Transfer"]
+  correlation:
+    type: sequence
+    window: 120
+    group_by: [host, user]
+    steps:
+      - step: 1
+        name: lolbin_exec
+        event_id: [4688]
+        process_name: ["mshta.exe", "wscript.exe", "cscript.exe", "regsvr32.exe", "rundll32.exe"]
+      - step: 2
+        name: download_attempt
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(http[s]?://|downloadstring|downloadfile|urlcache|bitsadmin)"
+
+
+
+- id: corr-enum-then-cred-dump
+  name: "[CORR] AD Enumeration Followed by Credential Dump"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1087 - Account Discovery", "T1003 - OS Credential Dumping"]
+  correlation:
+    type: sequence
+    window: 600
+    group_by: [host]
+    steps:
+      - step: 1
+        name: ad_enum
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(sharphound|bloodhound|Get-ADUser|Get-DomainUser|adfind|net\\s+group.*domain)"
+      - step: 2
+        name: cred_dump
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(mimikatz|sekurlsa|logonpasswords|lsadump|dcsync|comsvcs.*minidump|procdump.*lsass)"
+
+
+
+- id: corr-full-attack-chain
+  name: "[CORR] Full Attack Chain: Logon → Recon → Persistence"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1078", "T1082", "T1053", "T1543"]
+  correlation:
+    type: sequence
+    window: 900
+    group_by: [host]
+    steps:
+      - step: 1
+        name: initial_logon
+        event_id: [4624]
+        logon_type: [3, 10]
+        exclude_user: ["ANONYMOUS LOGON", "NT AUTHORITY\\SYSTEM"]
+      - step: 2
+        name: discovery
+        event_id: [4688]
+        process_name: ["whoami.exe", "systeminfo.exe", "net.exe", "ipconfig.exe", "nltest.exe"]
+      - step: 3
+        name: persistence
+        event_id: [4688, 4698, 7045, 4697]
+        process_name: ["schtasks.exe", "sc.exe", "reg.exe"]
+
+
+
+- id: corr-bruteforce-then-success
+  name: "[CORR] Brute Force Followed by Successful Logon"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1110.001 - Password Guessing"]
+  correlation:
+    type: sequence
+    window: 300
+    group_by: [host, target_user]
+    steps:
+      - step: 1
+        name: failed_logons
+        event_id: [4625]
+        min_count: 5
+      - step: 2
+        name: success_logon
+        event_id: [4624]
+        logon_type: [2, 3, 10]
+
+
+
+- id: corr-account-creation-then-group-add
+  name: "[CORR] Account Created Then Added to Privileged Group"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1136 - Create Account", "T1098 - Account Manipulation"]
+  correlation:
+    type: sequence
+    window: 600
+    group_by: [host, subject_user]
+    steps:
+      - step: 1
+        name: account_created
+        event_id: [4720]
+      - step: 2
+        name: added_to_group
+        event_id: [4728, 4732, 4756]
+
+
+
+- id: corr-shadow-delete-then-log-clear
+  name: "[CORR] Shadow Copy Deletion Followed by Log Clearing"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1490 - Inhibit System Recovery", "T1070.001 - Clear Windows Event Logs"]
+  correlation:
+    type: sequence
+    window: 600
+    group_by: [host]
+    steps:
+      - step: 1
+        name: shadow_delete
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(delete\\s+shadows|shadowcopy.*delete|resize\\s+shadowstorage)"
+      - step: 2
+        name: log_clear
+        event_id: [1102, 4719]
+
+
+
+- id: corr-defender-disable-then-download
+  name: "[CORR] Defender Disabled Then Payload Downloaded"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1562.001 - Disable or Modify Tools", "T1105 - Ingress Tool Transfer"]
+  correlation:
+    type: sequence
+    window: 300
+    group_by: [host]
+    steps:
+      - step: 1
+        name: disable_av
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(DisableRealtimeMonitoring|DisableAntiSpyware|Set-MpPreference.*Disable|Add-MpPreference.*Exclusion)"
+      - step: 2
+        name: download
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(urlcache|downloadstring|downloadfile|bitsadmin.*transfer|curl.*http|wget.*http)"
+
+
+
+- id: corr-multi-log-tamper
+  name: "[CORR] Multi-Tool Log Tampering Chain"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1070.001 - Clear Windows Event Logs", "T1562.002 - Disable Windows Event Logging"]
+  correlation:
+    type: threshold
+    window: 300
+    group_by: [host]
+    min_count: 2
+    rules:
+      - event-log-manipulation-utilities
+      - audit-policy-tampering-utility
+      - eventlog-service-stop-commands
+      - event-log-service-shutdown
+      - audit-policy-changed
+
+
+
+- id: corr-kerberoasting-chain
+  name: "[CORR] Kerberoasting Attack Chain"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1558.003 - Kerberoasting"]
+  correlation:
+    type: sequence
+    window: 600
+    group_by: [host, user]
+    steps:
+      - step: 1
+        name: spn_enum
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(setspn|Get-SPN|Get-DomainUser.*spn|Get-NetUser.*spn|-SPN)"
+      - step: 2
+        name: rc4_ticket_request
+        event_id: [4769]
+        ticket_encryption_regex: "0x17"
+        failure_code_regex: "0x0"
+
+
+
+- id: pass-the-hash-indicator
+  name: Pass-the-Hash Indicator
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1550.002 - Pass the Hash"]
+  event_id: [4624]
+  logon_type: [3]
+  auth_package_regex: "(?i)NTLM"
+  workstation_name_regex: "^.{0,1}$"
+  exclude_user:
+    - "ANONYMOUS LOGON"
+    - "NT AUTHORITY\\ANONYMOUS LOGON"
+    - "NT AUTHORITY\\SYSTEM"
+    - "SYSTEM"
+
+- id: corr-pth-then-lateral
+  name: "[CORR] Pass-the-Hash Followed by Lateral Movement"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1550.002 - Pass the Hash", "T1021 - Remote Services"]
+  correlation:
+    type: sequence
+    window: 180
+    group_by: [host]
+    steps:
+      - step: 1
+        name: pth_indicator
+        rule_id: pass-the-hash-indicator
+      - step: 2
+        name: new_network_logon
+        event_id: [4624, 5140]
+        logon_type: [3]
+        exclude_user: ["ANONYMOUS LOGON", "NT AUTHORITY\\SYSTEM"]
+
+
+
+- id: corr-persist-then-execute
+  name: "[CORR] Persistence Mechanism Created Then Immediately Executed"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1543.003 - Windows Service", "T1053.005 - Scheduled Task"]
+  correlation:
+    type: sequence
+    window: 60
+    group_by: [host]
+    steps:
+      - step: 1
+        name: persistence_created
+        event_id: [4698, 7045, 4697]
+      - step: 2
+        name: immediate_execution
+        event_id: [4688]
+        exclude_process: ["svchost.exe", "services.exe", "taskeng.exe"]
+
+
+
+- id: corr-offhours-logon-activity
+  name: "[CORR] Off-Hours Logon Followed by Sensitive Activity"
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1078 - Valid Accounts"]
+  correlation:
+    type: sequence
+    window: 1800
+    group_by: [host, user]
+    time_filter:
+      hours_outside: ["08:00", "18:00"]
+      or_weekends: true
+    steps:
+      - step: 1
+        name: offhours_logon
+        event_id: [4624]
+        logon_type: [3, 10]
+        exclude_user: ["NT AUTHORITY\\SYSTEM", "ANONYMOUS LOGON"]
+      - step: 2
+        name: sensitive_action
+        event_id: [4688]
+        process_cmdline_regex: "(?i)(mimikatz|lsass|vssadmin|rclone|7z|rar|certutil|bitsadmin|wevtutil)"
+
+
+
+- id: corr-password-spray-threshold
+  name: "[CORR] Password Spray - Multiple Accounts Failed Logon"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1110.003 - Password Spraying"]
+  correlation:
+    type: threshold
+    window: 300
+    group_by: [source_host]
+    count_distinct: target_user
+    min_count: 10
+    event_id: [4625]
+    logon_type: [3]
+
+- id: corr-account-lockout-spray
+  name: "[CORR] Multiple Account Lockouts (Spray Indicator)"
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1110 - Brute Force"]
+  correlation:
+    type: threshold
+    window: 300
+    group_by: [source_host]
+    count_distinct: target_user
+    min_count: 5
+    event_id: [4740]
+
+
+
+- id: corr-ransomware-prep-chain
+  name: "[CORR] Ransomware Preparation Chain"
+  description: "Detection rule description."
+  severity: critical
+  mitre: ["T1490 - Inhibit System Recovery", "T1562 - Impair Defenses", "T1070 - Indicator Removal"]
+  correlation:
+    type: threshold
+    window: 600
+    group_by: [host]
+    min_count: 2
+    rules:
+      - shadow-copy-deletion-tools
+      - volume-shadow-delete
+      - boot-recovery-disabled
+      - disable-windows-defender
+      - event-log-cleared
+      - audit-policy-changed
+      - event-log-service-shutdown
+
+- id: corr-living-off-land-burst
+  name: "[CORR] LOLBin Burst - Multiple LOLBins in Short Window"
+  description: "Detection rule description."
+  severity: high
+  mitre: ["T1218 - System Binary Proxy Execution"]
+  correlation:
+    type: threshold
+    window: 120
+    group_by: [host, user]
+    min_count: 3
+    rules:
+      - lolbin-process
+      - script-host-execution
+      - certutil-decode-download
+      - msiexec-remote-payload
+      - regsvr32-squiblydoo
+      - applocker-bypass-tools
+      - forfiles-command-execution
+      - odbcconf-dll-load

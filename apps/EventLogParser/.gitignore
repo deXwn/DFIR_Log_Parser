@@ -1,0 +1,33 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Binaries / DB
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+event_log/
+*.evtx
+
+# Node/Next
+web/node_modules/
+web/.next/
+web/.vercel/
+web/npm-debug.log*
+web/yarn-error.log*
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Env
+.env
+.env.local
+.env.production
+.env.development
+

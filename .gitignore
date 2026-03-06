@@ -1,0 +1,83 @@
+# -------------------------------------------------------------------
+# DFIR Suite - Privacy-first ignore rules
+# Goal: never commit local logs, databases, exports, credentials, or
+# machine-specific artifacts from this workspace.
+# -------------------------------------------------------------------
+
+# Runtime logs
+logs/
+*.log
+
+# SQLite / DB artifacts
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+
+# Event / case data
+*.evtx
+*.pcap
+*.pcapng
+*.etl
+*.dmp
+*.core
+
+# Archives often containing customer or incident data
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.bz2
+*.xz
+
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.kdbx
+
+# Python cache (landing http.server alternatives/scripts)
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*.tmp
+
+# Rust
+**/target/
+**/*.rs.bk
+
+# Node / Next
+**/node_modules/
+**/.next/
+**/.turbo/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Tool output directories
+apps/Log_parser/exports/*
+!apps/Log_parser/exports/.gitkeep
+apps/Log_parser/exports_local/*
+!apps/Log_parser/exports_local/.gitkeep
+apps/Log_parser/log/*
+!apps/Log_parser/log/.gitkeep
+apps/EventLogParser/event_log/
+
+# Optional local caches
+.cache/
+.pytest_cache/

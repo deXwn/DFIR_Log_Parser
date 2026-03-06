@@ -1,0 +1,76 @@
+/* Print-focused cleanup and layout */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Hide navigation and interactive chrome */
+  nav,
+  header,
+  footer,
+  .sidebar,
+  .print-hide {
+    display: none !important;
+  }
+
+  .print-wrapper {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-card {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    background: #fff !important;
+    padding: 12px !important;
+  }
+
+  .print-avoid {
+    page-break-inside: avoid;
+  }
+
+  .report-section {
+    page-break-inside: avoid;
+    margin-bottom: 12px;
+  }
+
+  .report-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .report-grid,
+  .timeline-card,
+  .report-card,
+  .pill {
+    page-break-inside: avoid;
+  }
+
+  pre {
+    page-break-inside: avoid;
+    overflow: visible !important;
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+    color: #111 !important;
+  }
+
+  /* Avoid widows/orphans */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Force main sections to start together if they don't fit */
+  .section-break {
+    page-break-before: always;
+  }
+
+}
