@@ -4,39 +4,77 @@
 
 :root {
   color-scheme: dark;
-  --bg: #0d0d0d;
-  --panel: #111111;
-  --panel-accent: #1a1a1a;
-  --text: #e5e5e5;
-  --accent: #00b7ff;
-  --primary: #cc0000;
+  --bg: #050b18;
+  --bg-mid: #081227;
+  --panel: #0f172a;
+  --panel-accent: #13213c;
+  --text: #e7eefb;
+  --muted: #9fb0c7;
+  --accent: #38bdf8;
+  --accent-strong: #0ea5e9;
+  --danger: #f87171;
+  --ok: #22c55e;
+  --ring: rgba(56, 189, 248, 0.38);
+}
+
+* {
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+  scrollbar-width: thin;
 }
 
 body {
   @apply min-h-screen;
-  background: var(--bg);
+  margin: 0;
   color: var(--text);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "Sora", "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 8% 6%, rgba(34, 211, 238, 0.11), transparent 34%),
+    radial-gradient(circle at 92% 0%, rgba(59, 130, 246, 0.14), transparent 28%),
+    radial-gradient(circle at 24% 94%, rgba(16, 185, 129, 0.1), transparent 38%),
+    linear-gradient(180deg, var(--bg-mid), var(--bg));
+}
+
+.app-body {
+  position: relative;
+}
+
+.app-body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 90%);
+  z-index: -1;
 }
 
 .input {
-  @apply border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 transition duration-200;
-  background: var(--panel-accent);
-  border-color: #222;
+  @apply border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 transition duration-200;
+  background: color-mix(in srgb, var(--panel-accent) 85%, #111827);
+  border-color: rgba(148, 163, 184, 0.24);
   color: var(--text);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   caret-color: var(--accent);
 }
 
 .input:focus {
-  box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(0, 183, 255, 0.3);
+  border-color: rgba(56, 189, 248, 0.58);
+  box-shadow: 0 0 0 2px var(--ring), inset 0 0 0 1px rgba(56, 189, 248, 0.45);
 }
 
 .glass {
-  background: rgba(17, 17, 17, 0.9);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: linear-gradient(
+    150deg,
+    rgba(15, 23, 42, 0.88),
+    rgba(15, 23, 42, 0.78) 50%,
+    rgba(19, 33, 60, 0.76)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.42);
+  backdrop-filter: blur(8px);
 }
 
 .interactive {
@@ -45,32 +83,69 @@ body {
 
 .interactive:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 183, 255, 0.18);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.42);
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+
 .badge-accent {
-  background: rgba(0, 183, 255, 0.12);
-  color: #00b7ff;
-  border: 1px solid rgba(0, 183, 255, 0.3);
+  background: rgba(56, 189, 248, 0.18);
+  color: #8edcff;
+  border: 1px solid rgba(56, 189, 248, 0.45);
 }
+
 .badge-danger {
-  background: rgba(204, 0, 0, 0.18);
-  color: #ff9a9a;
-  border: 1px solid rgba(204, 0, 0, 0.4);
+  background: rgba(248, 113, 113, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.42);
 }
+
 .badge-muted {
-  background: rgba(255, 255, 255, 0.04);
-  color: #b0b0b0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(148, 163, 184, 0.14);
+  color: #c8d4e8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.content-shell {
+  width: 100%;
+  max-width: 1560px;
+  margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+  .content-shell {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

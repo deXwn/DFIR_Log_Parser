@@ -26,47 +26,44 @@ export default function SearchPage() {
     <Card className="p-6 md:p-8 space-y-4">
       <div className="space-y-2">
         <div className="text-xs text-muted">
-          Use commas for multiple values in exclude:{" "}
-          <span className="font-mono">a,b</span>
+          Use commas for multiple values in exclude: <span className="font-mono">a,b</span>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-        <input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder="Search events..."
-          className="flex-1 min-w-[240px] bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-        />
-        <input
-          value={logonType}
-          onChange={(e) => setLogonType(e.target.value)}
-          placeholder="LogonType (e.g., 10)"
-          className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-        />
-        <input
-          value={ip}
-          onChange={(e) => setIp(e.target.value)}
-          placeholder="IP include"
-          className="w-40 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-        />
-        <input
-          value={exclude}
-          onChange={(e) => setExclude(e.target.value)}
-          placeholder="Exclude (global, a,b)"
-          className="w-44 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-        />
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 rounded-lg bg-accent/80 text-slate-900 text-sm font-semibold hover:bg-accent transition"
-        >
-          Search
-        </button>
+          <input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Search events..."
+            className="input flex-1 min-w-[240px]"
+          />
+          <input
+            value={logonType}
+            onChange={(e) => setLogonType(e.target.value)}
+            placeholder="LogonType"
+            className="input w-32"
+          />
+          <input
+            value={ip}
+            onChange={(e) => setIp(e.target.value)}
+            placeholder="IP include"
+            className="input w-40"
+          />
+          <input
+            value={exclude}
+            onChange={(e) => setExclude(e.target.value)}
+            placeholder="Exclude (a,b)"
+            className="input w-44"
+          />
+          <button
+            onClick={() => refetch()}
+            className="rounded-lg border border-accent/35 bg-accent/20 px-4 py-2 text-sm font-semibold text-sky-100 transition hover:bg-accent/30"
+          >
+            Search
+          </button>
         </div>
       </div>
       {isFetching && <div className="text-slate-400 text-sm">Searching…</div>}
       {error && (
-        <div className="text-danger text-sm">
-          {(error as Error).message || "Search failed"}
-        </div>
+        <div className="text-danger text-sm">{(error as Error).message || "Search failed"}</div>
       )}
       <div className="space-y-3">
         {(data as any)?.data?.map((ev: any) => (
