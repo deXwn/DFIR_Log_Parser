@@ -6,6 +6,17 @@ EVENT_DIR="${ROOT_DIR}/apps/EventLogParser"
 LOG_DIR="${ROOT_DIR}/apps/Log_parser"
 LANDING_DIR="${ROOT_DIR}/landing"
 
+require_command() {
+  local cmd="$1"
+  local hint="$2"
+  if ! command -v "${cmd}" >/dev/null 2>&1; then
+    echo "Error: required command not found: ${cmd}" >&2
+    echo "Hint: ${hint}" >&2
+    echo "Run: ${ROOT_DIR}/setup.sh" >&2
+    exit 1
+  fi
+}
+
 if [[ ! -d "${EVENT_DIR}" ]]; then
   echo "Error: EventLogParser directory not found: ${EVENT_DIR}" >&2
   exit 1
@@ -29,6 +40,12 @@ export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-http://localhost:8080}"
 export BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0:8800}"
 STARTUP_TIMEOUT_SECS="${STARTUP_TIMEOUT_SECS:-600}"
 AUTO_KILL_PORTS="${AUTO_KILL_PORTS:-0}"
+
+require_command "bash" "Install bash from your package manager."
+require_command "curl" "Install curl from your package manager."
+require_command "ss" "Install iproute2 (provides ss)."
+require_command "cargo" "Install Rust toolchain (cargo + rustc)."
+require_command "npm" "Install Node.js + npm."
 
 PIDS=()
 STARTED_PID=""

@@ -134,6 +134,7 @@ Main API surface (high-value endpoints):
 
 ```text
 DFIR_suite/
+  ├─ setup.sh
   ├─ start.sh
   ├─ README.md
   ├─ landing/
@@ -162,7 +163,23 @@ Recommended:
 
 ## Installation
 
-Install runtime/build dependencies first, then start the suite.
+Use the automated installer (recommended), then start the suite.
+
+### Quick Setup (recommended)
+
+From the `DFIR_suite` directory:
+
+```bash
+chmod +x setup.sh start.sh
+./setup.sh
+./start.sh
+```
+
+`setup.sh` installs required system/runtime dependencies, installs npm dependencies for the Event UI, and pre-fetches Rust dependencies for both parsers.
+
+### Manual Setup (optional)
+
+If you do not want to use `setup.sh`, follow the manual steps below.
 
 ### 1. Install Rust and Cargo (required)
 
@@ -320,6 +337,9 @@ STARTUP_TIMEOUT_SECS=1200 ./start.sh
 ## Useful Commands
 
 ```bash
+# One-time automatic installation
+./setup.sh
+
 # Start suite
 ./start.sh
 
