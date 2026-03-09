@@ -2,7 +2,7 @@
 
 - id: suspicious-logon-ip
   name: Suspicious Logon from Known Bad IP
-  description: "Detection rule description."
+  description: Detect logon failures/success from known bad IPs
   severity: high
   mitre: ["T1078 - Valid Accounts"]
   event_id: [4624, 4625]
@@ -10,7 +10,9 @@
 
 - id: lolbin-process
   name: LOLBin Process Start
-  description: "Detection rule description."
+  description: >
+    Process creation with LOLBin names. powershell.exe, mshta.exe and rundll32.exe
+    were moved to separate specific rules; only generic LOLBins remain here.
   severity: medium
   mitre: ["T1218 - System Binary Proxy Execution", "T1059 - Command and Scripting Interpreter"]
   event_id: [4688]
@@ -19,7 +21,8 @@
 
 - id: event-log-cleared
   name: Event Log Cleared
-  description: "Detection rule description."
+  description: >
+    Security event log was cleared. Strong indicator of attacker trace removal.
   severity: high
   mitre: ["T1070.001 - Clear Windows Event Logs"]
   event_id: [1102]
@@ -27,7 +30,7 @@
 
 - id: new-service-created
   name: New Service Created
-  description: "Detection rule description."
+  description: A new service was created. This may be a persistence mechanism.
   severity: medium
   mitre: ["T1543.003 - Windows Service"]
   event_id: [7045]
@@ -35,7 +38,7 @@
 
 - id: scheduled-task-created-updated
   name: Scheduled Task Created or Updated
-  description: "Detection rule description."
+  description: A new task was created or updated. Common persistence technique.
   severity: medium
   mitre: ["T1053.005 - Scheduled Task"]
   event_id: [4698, 4702]
@@ -43,7 +46,7 @@
 
 - id: user-added-to-privileged-group
   name: User Added to Privileged Group
-  description: "Detection rule description."
+  description: A user was added to a high-privilege group (Administrators, Domain Admins, etc.).
   severity: high
   mitre: ["T1098 - Account Manipulation"]
   event_id: [4728, 4732, 4756]
@@ -51,15 +54,17 @@
 
 - id: rdp-logon-type-10
   name: Remote Desktop Logon (Type 10)
-  description: "Detection rule description."
-  severity: medium  # FIXED: "low" -> "medium"
+  description: >
+    Event ID 4624 Logon Type 10: RDP session. RDP logons from unknown or unexpected
+    source IPs can indicate lateral movement.
+  severity: medium
   mitre: ["T1021.001 - Remote Desktop Protocol"]
   event_id: [4624]
   logon_type: [10]
 
 - id: scheduled-task-lifecycle-security
   name: Scheduled Task Lifecycle Changes
-  description: "Detection rule description."
+  description: Task create/update/delete/disable/enable activity.
   severity: high
   mitre: ["T1053.005 - Scheduled Task"]
   event_id: [4698, 4699, 4700, 4701, 4702]
@@ -67,7 +72,7 @@
 
 - id: scheduled-task-tool-execution
   name: Scheduled Task Tool Execution
-  description: "Detection rule description."
+  description: Use of schtasks.exe / at.exe for persistence or lateral movement.
   severity: high
   mitre: ["T1053.005 - Scheduled Task"]
   event_id: [4688]
@@ -75,7 +80,7 @@
 
 - id: powershell-script-block-logging
   name: PowerShell Script Block Activity
-  description: "Detection rule description."
+  description: PowerShell script block / module logs (script-based activity).
   severity: high
   mitre: ["T1059.001 - PowerShell"]
   event_id: [4103, 4104]
@@ -83,7 +88,7 @@
 
 - id: powershell-process-execution
   name: PowerShell Process Execution
-  description: "Detection rule description."
+  description: PowerShell process execution (interactive / script execution).
   severity: high
   mitre: ["T1059.001 - PowerShell"]
   event_id: [4688]
@@ -92,7 +97,7 @@
 
 - id: event-log-manipulation-utilities
   name: Event Log Manipulation Utilities
-  description: "Detection rule description."
+  description: Event log clear/export/query actions via wevtutil.
   severity: critical
   mitre: ["T1070.001 - Clear Windows Event Logs"]
   event_id: [4688]
@@ -100,7 +105,7 @@
 
 - id: audit-policy-tampering-utility
   name: Audit Policy Tampering Utility
-  description: "Detection rule description."
+  description: Attempt to modify or suppress audit policy via auditpol.
   severity: critical
   mitre: ["T1562.002 - Disable Windows Event Logging"]
   event_id: [4688]
@@ -108,7 +113,7 @@
 
 - id: security-log-full
   name: Security Log Full
-  description: "Detection rule description."
+  description: Security log is full; event collection may have been interrupted.
   severity: high
   mitre: ["T1562.002 - Disable Windows Event Logging"]
   event_id: [1104]
@@ -116,7 +121,7 @@
 
 - id: eventlog-service-stop-commands
   name: Event Log Service Stop/Control Commands
-  description: "Detection rule description."
+  description: Attempt to stop EventLog service via sc/net commands.
   severity: critical
   mitre: ["T1562.002 - Disable Windows Event Logging"]
   event_id: [4688]
@@ -125,7 +130,9 @@
 
 - id: logging-agent-tampering-tools
   name: Logging Agent Tampering Tools
-  description: "Detection rule description."
+  description: >
+    Tools used to terminate log collection agents.
+    FIXED: mandatory cmdline regex added for powershell.exe (FP reduction).
   severity: high
   mitre: ["T1562 - Impair Defenses"]
   event_id: [4688]
@@ -133,7 +140,7 @@
 
 - id: logging-agent-tampering-powershell
   name: Logging Agent Tampering via PowerShell
-  description: "Detection rule description."
+  description: Attempt to stop/kill log agent services via PowerShell.
   severity: high
   mitre: ["T1562 - Impair Defenses"]
   event_id: [4688]
@@ -142,7 +149,7 @@
 
 - id: explicit-credentials-used
   name: Explicit Credentials Used
-  description: "Detection rule description."
+  description: 4648 -> logon attempt using explicit credentials (runas, pass-the-hash).
   severity: high
   mitre: ["T1078 - Valid Accounts", "T1550.002 - Pass the Hash"]
   event_id: [4648]
@@ -150,7 +157,7 @@
 
 - id: special-privileges-assigned
   name: Special Privileges Assigned to New Logon
-  description: "Detection rule description."
+  description: 4672 -> privileged token assignment after logon.
   severity: high
   mitre: ["T1134 - Access Token Manipulation"]
   event_id: [4672]
@@ -165,7 +172,7 @@
 
 - id: audit-policy-changed
   name: Audit Policy Changed
-  description: "Detection rule description."
+  description: 4719 -> audit policy was changed or reconfigured.
   severity: critical
   mitre: ["T1562.002 - Disable Windows Event Logging"]
   event_id: [4719]
@@ -173,7 +180,7 @@
 
 - id: system-time-changed
   name: System Time Changed
-  description: "Detection rule description."
+  description: 4616 -> indicator of anti-forensics timeline manipulation.
   severity: high
   mitre: ["T1070.006 - Timestomp"]
   event_id: [4616]
@@ -188,7 +195,7 @@
 
 - id: event-log-service-shutdown
   name: Event Log Service Shutdown
-  description: "Detection rule description."
+  description: 1100 -> Windows Event Log service was shut down.
   severity: critical
   mitre: ["T1562.002 - Disable Windows Event Logging"]
   event_id: [1100]
@@ -196,7 +203,7 @@
 
 - id: account-created
   name: User Account Created
-  description: "Detection rule description."
+  description: 4720 -> new local/domain account was created.
   severity: high
   mitre: ["T1136 - Create Account"]
   event_id: [4720]
@@ -204,7 +211,7 @@
 
 - id: account-enabled
   name: User Account Enabled
-  description: "Detection rule description."
+  description: 4722 -> account was enabled.
   severity: medium
   mitre: ["T1098 - Account Manipulation"]
   event_id: [4722]
@@ -212,7 +219,7 @@
 
 - id: account-password-reset
   name: Account Password Reset Attempt
-  description: "Detection rule description."
+  description: 4724 -> password reset operation.
   severity: high
   mitre: ["T1098 - Account Manipulation"]
   event_id: [4724]
@@ -220,7 +227,7 @@
 
 - id: account-disabled-or-deleted
   name: Account Disabled or Deleted
-  description: "Detection rule description."
+  description: 4725/4726 -> account was disabled or deleted.
   severity: high
   mitre: ["T1531 - Account Access Removal"]
   event_id: [4725, 4726]
@@ -228,7 +235,7 @@
 
 - id: account-lockout
   name: Account Lockout
-  description: "Detection rule description."
+  description: 4740 -> indicator of brute force or password spray activity.
   severity: medium
   mitre: ["T1110 - Brute Force"]
   event_id: [4740]
@@ -236,7 +243,7 @@
 
 - id: privileged-group-member-removed
   name: Member Removed from Privileged Group
-  description: "Detection rule description."
+  description: Group membership changes may indicate privilege cleanup or stealth.
   severity: medium
   mitre: ["T1098 - Account Manipulation"]
   event_id: [4729, 4733, 4757]
@@ -244,7 +251,7 @@
 
 - id: service-installed-security
   name: Service Installed (Security Log)
-  description: "Detection rule description."
+  description: 4697 -> service was installed.
   severity: high
   mitre: ["T1543.003 - Windows Service"]
   event_id: [4697]
@@ -252,7 +259,7 @@
 
 - id: shadow-copy-deletion-tools
   name: Shadow Copy / Backup Deletion Tools
-  description: "Detection rule description."
+  description: Ransomware preparation tools; backup and recovery tampering.
   severity: critical
   mitre: ["T1490 - Inhibit System Recovery"]
   event_id: [4688]
@@ -261,7 +268,7 @@
 
 - id: remote-execution-tooling
   name: Remote Execution Tooling
-  description: "Detection rule description."
+  description: Tools for lateral movement and remote command execution.
   severity: high
   mitre: ["T1021 - Remote Services", "T1569 - System Services"]
   event_id: [4688]
@@ -269,7 +276,7 @@
 
 - id: defense-evasion-network-tamper
   name: Network/Firewall Tampering Tools
-  description: "Detection rule description."
+  description: Tools used to disable or alter network/firewall behavior.
   severity: high
   mitre: ["T1562.004 - Disable or Modify System Firewall"]
   event_id: [4688]
@@ -278,7 +285,7 @@
 
 - id: script-host-execution
   name: Script Host Execution
-  description: "Detection rule description."
+  description: Script host binaries commonly used in phishing payload chains.
   severity: medium
   mitre: ["T1218 - System Binary Proxy Execution", "T1059.005 - Visual Basic"]
   event_id: [4688]
@@ -286,17 +293,17 @@
 
 - id: archive-and-staging-tools
   name: Archive and Staging Tools
-  description: "Detection rule description."
+  description: Data staging/compression tools used before exfiltration.
   severity: high
   mitre: ["T1560 - Archive Collected Data"]
   event_id: [4688]
   process_name: ["7z.exe", "7za.exe", "rar.exe", "winrar.exe", "tar.exe"]
 
-
-
 - id: lsass-memory-access-tools
   name: LSASS Memory Access Tools
-  description: "Detection rule description."
+  description: >
+    Known credential dumping tools. Access to the LSASS process
+    is a strong indicator of credential theft attempts.
   severity: critical
   mitre: ["T1003.001 - LSASS Memory"]
   event_id: [4688]
@@ -305,7 +312,9 @@
 
 - id: lsass-process-dump-cmdline
   name: LSASS Dump via Command Line
-  description: "Detection rule description."
+  description: >
+    LSASS dump attempt via command line (Task Manager, ProcDump,
+    rundll32, or comsvcs.dll method).
   severity: critical
   mitre: ["T1003.001 - LSASS Memory"]
   event_id: [4688]
@@ -313,7 +322,9 @@
 
 - id: registry-sam-hive-access
   name: SAM/SYSTEM/SECURITY Hive Dump
-  description: "Detection rule description."
+  description: >
+    Copying SAM, SYSTEM, or SECURITY registry hives.
+    Classic technique used for offline password cracking.
   severity: critical
   mitre: ["T1003.002 - Security Account Manager"]
   event_id: [4688]
@@ -321,17 +332,19 @@
 
 - id: ntds-dit-access
   name: NTDS.dit Access Attempt
-  description: "Detection rule description."
+  description: >
+    Access attempt to NTDS.dit on a domain controller.
+    Contains all domain hashes.
   severity: critical
   mitre: ["T1003.003 - NTDS"]
   event_id: [4688]
   process_cmdline_regex: "(?i)(ntds\\.dit|ntdsutil|ifm|activate\\s+instance\\s+ntds)"
 
-
-
 - id: wmic-remote-execution
   name: WMIC Remote Process Execution
-  description: "Detection rule description."
+  description: >
+    Creating processes on remote systems via WMIC. Commonly used
+    for lateral movement and command execution.
   severity: high
   mitre: ["T1047 - Windows Management Instrumentation"]
   event_id: [4688]
@@ -340,18 +353,20 @@
 
 - id: wmi-persistence-subscription
   name: WMI Event Subscription (Persistence)
-  description: "Detection rule description."
+  description: >
+    WMI event subscription creation. Attackers use this technique
+    for powerful and hard-to-detect persistence.
   severity: critical
   mitre: ["T1546.003 - WMI Event Subscription"]
   event_id: [4688]
   process_name: ["wmic.exe", "powershell.exe", "pwsh.exe"]
   process_cmdline_regex: "(?i)(EventFilter|EventConsumer|FilterToConsumerBinding|__EventFilter|CommandLineEventConsumer|ActiveScriptEventConsumer)"
 
-
-
 - id: registry-run-key-modification
   name: Registry Run Key Modification
-  description: "Detection rule description."
+  description: >
+    Writes to Run/RunOnce keys. These are among the most common
+    registry locations for startup persistence.
   severity: high
   mitre: ["T1547.001 - Registry Run Keys / Startup Folder"]
   event_id: [4688]
@@ -360,7 +375,9 @@
 
 - id: registry-security-tamper
   name: Registry Security Policy Tampering
-  description: "Detection rule description."
+  description: >
+    Registry changes that disable UAC, Windows Defender,
+    or other security policies.
   severity: critical
   mitre: ["T1112 - Modify Registry", "T1562.001 - Disable or Modify Tools"]
   event_id: [4688]
@@ -369,17 +386,19 @@
 
 - id: registry-hidden-key-creation
   name: Hidden Registry Key Creation
-  description: "Detection rule description."
+  description: >
+    Registry key names containing null bytes or special characters.
+    Used to evade traditional tooling.
   severity: critical
   mitre: ["T1112 - Modify Registry"]
   event_id: [4688]
   process_cmdline_regex: "(?i)(reg\\s+add).*(\\\\0|\\x00|\\u0000)"
 
-
-
 - id: network-discovery-commands
   name: Network Discovery Commands
-  description: "Detection rule description."
+  description: >
+    Tools used for network discovery. Common commands
+    observed in post-exploitation stages.
   severity: medium
   mitre: ["T1018 - Remote System Discovery", "T1046 - Network Service Scanning"]
   event_id: [4688]
@@ -388,7 +407,7 @@
 
 - id: system-info-discovery
   name: System Information Discovery
-  description: "Detection rule description."
+  description: System information gathering tools (host, OS, domain discovery).
   severity: low
   mitre: ["T1082 - System Information Discovery"]
   event_id: [4688]
@@ -397,7 +416,7 @@
 
 - id: process-and-service-discovery
   name: Process and Service Discovery
-  description: "Detection rule description."
+  description: Discovery of running processes and services.
   severity: low
   mitre: ["T1057 - Process Discovery", "T1007 - System Service Discovery"]
   event_id: [4688]
@@ -406,7 +425,9 @@
 
 - id: security-software-discovery
   name: Security Software Discovery
-  description: "Detection rule description."
+  description: >
+    AV/EDR/security software discovery. Attackers run these commands
+    to identify which security tools are active.
   severity: medium
   mitre: ["T1518.001 - Security Software Discovery"]
   event_id: [4688]
@@ -415,18 +436,18 @@
 
 - id: file-and-directory-discovery
   name: File and Directory Discovery
-  description: "Detection rule description."
+  description: Commands used to search for sensitive files/directories.
   severity: low
   mitre: ["T1083 - File and Directory Discovery"]
   event_id: [4688]
   process_name: ["dir.exe", "tree.exe", "where.exe", "findstr.exe"]
   process_cmdline_regex: "(?i)(\\.kdbx|\\.pem|\\.pfx|\\.key|\\.conf|password|secret|credential|wallet|\\.ssh)"
 
-
-
 - id: smb-admin-share-access
   name: Admin Share Access (C$, ADMIN$, IPC$)
-  description: "Detection rule description."
+  description: >
+    Access to administrative shares. Used for lateral movement,
+    file copy, or remote execution.
   severity: high
   mitre: ["T1021.002 - SMB/Windows Admin Shares"]
   event_id: [5140]
@@ -434,7 +455,9 @@
 
 - id: network-logon-type-3
   name: Network Logon (Type 3) from External Source
-  description: "Detection rule description."
+  description: >
+    Network authentication (Logon Type 3). Can indicate remote access
+    via SMB, WMI, PSExec, and similar tooling.
   severity: medium
   mitre: ["T1021 - Remote Services"]
   event_id: [4624]
@@ -444,22 +467,24 @@
 
 - id: pass-the-hash-indicator
   name: Pass-the-Hash Indicator
-  description: "Detection rule description."
+  description: >
+    NTLM logon combined with null or single-character workstation name.
+    Characteristic indicator of Mimikatz pass-the-hash attacks.
   severity: critical
   mitre: ["T1550.002 - Pass the Hash"]
   event_id: [4624]
   logon_type: [3]
   auth_package_regex: "(?i)NTLM"
   workstation_name_regex: "^.{0,1}$"
-  exclude_user:                        # added
+  exclude_user:
     - "ANONYMOUS LOGON"
     - "NT AUTHORITY\\ANONYMOUS LOGON"
 
-
-
 - id: binary-renamed-lolbin
   name: Renamed LOLBin Execution
-  description: "Detection rule description."
+  description: >
+    Execution of known binaries under different names.
+    Classic technique used to evade detection.
   severity: high
   mitre: ["T1036.003 - Rename System Utilities"]
   event_id: [4688]
@@ -467,7 +492,9 @@
 
 - id: applocker-bypass-tools
   name: AppLocker / WDAC Bypass Execution
-  description: "Detection rule description."
+  description: >
+    AppLocker and Windows Defender Application Control bypass tools.
+    Malicious code execution through allowlisted binaries.
   severity: high
   mitre: ["T1218 - System Binary Proxy Execution"]
   event_id: [4688]
@@ -476,7 +503,9 @@
 
 - id: alternate-data-stream-execution
   name: Alternate Data Stream (ADS) Execution
-  description: "Detection rule description."
+  description: >
+    Hidden file execution through NTFS alternate data streams.
+    Technique used by malware to evade detection.
   severity: high
   mitre: ["T1564.004 - NTFS File Attributes"]
   event_id: [4688]
@@ -484,7 +513,9 @@
 
 - id: process-injection-tools
   name: Process Injection Indicator Tools
-  description: "Detection rule description."
+  description: >
+    Known process injection tools or characteristic
+    injection command-line patterns.
   severity: critical
   mitre: ["T1055 - Process Injection"]
   event_id: [4688]
@@ -492,7 +523,8 @@
 
 - id: timestomp-indicator
   name: Timestomping Indicator
-  description: "Detection rule description."
+  description: >
+    File timestamp manipulation tools (anti-forensics).
   severity: high
   mitre: ["T1070.006 - Timestomp"]
   event_id: [4688]
@@ -500,18 +532,20 @@
 
 - id: disable-windows-defender
   name: Windows Defender Disabled or Tampered
-  description: "Detection rule description."
+  description: >
+    PowerShell or registry commands that disable
+    Windows Defender.
   severity: critical
   mitre: ["T1562.001 - Disable or Modify Tools"]
   event_id: [4688]
   process_name: ["powershell.exe", "pwsh.exe", "reg.exe"]
   process_cmdline_regex: "(?i)(Set-MpPreference.*Disable|Add-MpPreference.*Exclusion|DisableRealtimeMonitoring|DisableBehaviorMonitoring|DisableIOAVProtection|DisableScriptScanning)"
 
-
-
 - id: dns-exfil-tools
   name: DNS / Network Exfiltration Tools
-  description: "Detection rule description."
+  description: >
+    DNS and network tools that can be used for
+    data exfiltration or C2 communication.
   severity: high
   mitre: ["T1048 - Exfiltration Over Alternative Protocol"]
   event_id: [4688]
@@ -520,7 +554,9 @@
 
 - id: web-download-tools
   name: Web Download via LOLBins
-  description: "Detection rule description."
+  description: >
+    Downloading files from the web via legitimate Windows tools.
+    Common in malware dropper chains.
   severity: high
   mitre: ["T1105 - Ingress Tool Transfer"]
   event_id: [4688]
@@ -529,17 +565,19 @@
 
 - id: c2-beacon-tool-names
   name: Known C2 Framework Tool Names
-  description: "Detection rule description."
+  description: >
+    Known C2 framework binary names or characteristic
+    command patterns.
   severity: critical
   mitre: ["T1071 - Application Layer Protocol"]
   event_id: [4688]
   process_name_regex: "(?i)(beacon\\.exe|cobaltstrike|cs\\.exe|havoc\\.exe|sliver|brute\\.exe|merlin\\.exe|covenant)"
 
-
-
 - id: ransomware-file-extension-creation
   name: Ransomware Extension Pattern (Mass File Change)
-  description: "Detection rule description."
+  description: >
+    Mass file extension changes. Characteristic
+    indicator of ransomware encryption activity.
   severity: critical
   mitre: ["T1486 - Data Encrypted for Impact"]
   event_id: [4688]
@@ -547,7 +585,9 @@
 
 - id: volume-shadow-delete
   name: Volume Shadow Copy Deletion
-  description: "Detection rule description."
+  description: >
+    Shadow copy deletion command. Observed in
+    almost all ransomware operations.
   severity: critical
   mitre: ["T1490 - Inhibit System Recovery"]
   event_id: [4688]
@@ -556,18 +596,20 @@
 
 - id: boot-recovery-disabled
   name: Boot Recovery / Safe Mode Disabled
-  description: "Detection rule description."
+  description: >
+    Commands that disable recovery options or safe mode via bcdedit.
+    Common pre-ransomware preparation step.
   severity: critical
   mitre: ["T1490 - Inhibit System Recovery"]
   event_id: [4688]
   process_name: ["bcdedit.exe"]
   process_cmdline_regex: "(?i)(recoveryenabled\\s+no|bootstatuspolicy\\s+ignoreallfailures|safeboot)"
 
-
-
 - id: powershell-encoded-command
   name: PowerShell Encoded Command Execution
-  description: "Detection rule description."
+  description: >
+    Execution of Base64-encoded PowerShell commands. Frequently used
+    by attackers to evade signature-based detection.
   severity: high
   mitre: ["T1059.001 - PowerShell", "T1027 - Obfuscated Files or Information"]
   event_id: [4688]
@@ -576,7 +618,9 @@
 
 - id: powershell-download-cradle
   name: PowerShell Download Cradle
-  description: "Detection rule description."
+  description: >
+    Fileless payload download and execution via PowerShell.
+    Classic "download cradle" combination with IEX + DownloadString.
   severity: critical
   mitre: ["T1059.001 - PowerShell", "T1105 - Ingress Tool Transfer"]
   event_id: [4688, 4103, 4104]
@@ -584,7 +628,9 @@
 
 - id: powershell-reflection-amsi-bypass
   name: PowerShell AMSI Bypass Attempt
-  description: "Detection rule description."
+  description: >
+    AMSI (Antimalware Scan Interface) bypass attempt.
+    Attempts to evade script scanning by security tools.
   severity: critical
   mitre: ["T1562.001 - Disable or Modify Tools"]
   event_id: [4103, 4104]
@@ -593,17 +639,20 @@
 
 - id: powershell-constrained-language-bypass
   name: PowerShell Constrained Language Mode Bypass
-  description: "Detection rule description."
+  description: >
+    PowerShell Constrained Language Mode bypass techniques.
   severity: high
   mitre: ["T1059.001 - PowerShell"]
   event_id: [4103, 4104]
   channel: ["Microsoft-Windows-PowerShell/Operational"]
   script_block_regex: "(?i)(__PSLockDownPolicy|FullLanguage|ExecutionContext\\.SessionState\\.LanguageMode)"
 
-
 - id: kerberoasting-spn-request
   name: Kerberoasting - SPN Ticket Request
-  description: "Detection rule description."
+  description: >
+    RC4-encrypted service ticket requests in Event ID 4769.
+    Strong indicator of Kerberoasting activity; the attacker requests the ticket
+    to crack the service account hash offline.
   severity: high
   mitre: ["T1558.003 - Kerberoasting"]
   event_id: [4769]
@@ -616,7 +665,10 @@
 
 - id: asrep-roasting-preauth-disabled
   name: AS-REP Roasting - Pre-Auth Disabled Account
-  description: "Detection rule description."
+  description: >
+    TGT request in Event ID 4768 for an account with Kerberos pre-authentication
+    disabled (RC4 encryption). The attacker obtains an encrypted TGT for
+    offline brute-force cracking.
   severity: high
   mitre: ["T1558.004 - AS-REP Roasting"]
   event_id: [4768]
@@ -626,7 +678,10 @@
 
 - id: golden-ticket-indicator
   name: Golden Ticket Usage Indicator
-  description: "Detection rule description."
+  description: >
+    Kerberos logon from an invalid domain or from an account inconsistent with
+    expected built-in administrator patterns. Indicates possible forged TGT
+    (Golden Ticket) usage; a null LogonGuid combined with krbtgt access is a strong signal.
   severity: critical
   mitre: ["T1558.001 - Golden Ticket"]
   event_id: [4624, 4672]
@@ -640,7 +695,9 @@
 
 - id: silver-ticket-indicator
   name: Silver Ticket Usage Indicator
-  description: "Detection rule description."
+  description: >
+    Service access without valid domain context (Silver Ticket).
+    In Event ID 4624, AuthPackage is Kerberos but the Domain field is empty or null.
   severity: critical
   mitre: ["T1558.002 - Silver Ticket"]
   event_id: [4624]
@@ -651,7 +708,9 @@
 
 - id: overpass-the-hash
   name: Overpass-the-Hash (Pass-the-Key)
-  description: "Detection rule description."
+  description: >
+    Technique for obtaining a Kerberos ticket using an NTLM hash.
+    Suspicious when Event ID 4768 uses RC4 encryption and a source IP is present.
   severity: critical
   mitre: ["T1550.002 - Pass the Hash"]
   event_id: [4768]
@@ -661,18 +720,20 @@
 
 - id: kerberos-ticket-anomaly
   name: Excessive Kerberos Ticket Requests
-  description: "Detection rule description."
+  description: >
+    Service ticket requests for many different SPNs in a short time window.
+    Indicator of Kerberoasting or aggressive network reconnaissance.
   severity: high
   mitre: ["T1558.003 - Kerberoasting"]
   event_id: [4769]
   channel: ["Security"]
   failure_code_regex: "0x0"
 
-
-
 - id: dcsync-replication-rights
   name: DCSync Attack - Directory Replication
-  description: "Detection rule description."
+  description: >
+    Use of directory replication rights in Event ID 4662 from a non-domain-controller host.
+    Characteristic sign of the Mimikatz DCSync module; it can retrieve all domain hashes.
   severity: critical
   mitre: ["T1003.006 - DCSync"]
   event_id: [4662]
@@ -684,7 +745,9 @@
 
 - id: domain-controller-access-non-dc
   name: Sensitive DC Object Access from Non-DC
-  description: "Detection rule description."
+  description: >
+    Access to critical domain controller objects (AdminSDHolder, krbtgt, etc.)
+    from a non-domain-controller host.
   severity: critical
   mitre: ["T1003.006 - DCSync"]
   event_id: [4662]
@@ -693,18 +756,20 @@
 
 - id: ad-object-creation-sensitive
   name: Sensitive AD Object Created
-  description: "Detection rule description."
+  description: >
+    Creation of a new account, group, or GPO under a sensitive OU or directory path.
   severity: high
   mitre: ["T1136.002 - Domain Account"]
   event_id: [5137]
   channel: ["Security"]
   object_dn_regex: "(?i)(OU=Domain Controllers|CN=Admins|CN=Schema|CN=Policies)"
 
-
-
 - id: token-impersonation-seimpersonate
   name: Token Impersonation via SeImpersonatePrivilege
-  description: "Detection rule description."
+  description: >
+    Assignment of SeImpersonatePrivilege or SeAssignPrimaryTokenPrivilege.
+    Often seen in token impersonation chains used by privilege-escalation tools
+    such as PrintSpoofer, Juicy Potato, and RoguePotato.
   severity: high
   mitre: ["T1134.001 - Token Impersonation/Theft"]
   event_id: [4672]
@@ -720,7 +785,9 @@
 
 - id: sensitive-privilege-use
   name: Sensitive Privilege Use (4673)
-  description: "Detection rule description."
+  description: >
+    Privileged service call using SeDebugPrivilege or SeTakeOwnershipPrivilege.
+    Commonly observed in process injection and file ownership manipulation attacks.
   severity: high
   mitre: ["T1134 - Access Token Manipulation"]
   event_id: [4673]
@@ -730,11 +797,11 @@
     - "NT AUTHORITY\\SYSTEM"
     - "SYSTEM"
 
-
-
 - id: uac-bypass-fodhelper
   name: UAC Bypass via fodhelper.exe
-  description: "Detection rule description."
+  description: >
+    UAC bypass via fodhelper.exe. Abuses automatic elevation
+    to launch a high-privilege process.
   severity: high
   mitre: ["T1548.002 - Bypass User Account Control"]
   event_id: [4688]
@@ -743,7 +810,9 @@
 
 - id: uac-bypass-eventvwr
   name: UAC Bypass via eventvwr.exe
-  description: "Detection rule description."
+  description: >
+    UAC bypass via eventvwr.exe registry hijack. Manipulates
+    HKCU\Software\Classes\mscfile to spawn an elevated shell.
   severity: high
   mitre: ["T1548.002 - Bypass User Account Control"]
   event_id: [4688]
@@ -752,7 +821,8 @@
 
 - id: uac-bypass-sdclt
   name: UAC Bypass via sdclt.exe
-  description: "Detection rule description."
+  description: >
+    UAC bypass technique using the sdclt.exe (Backup and Restore) isolation COM object.
   severity: high
   mitre: ["T1548.002 - Bypass User Account Control"]
   event_id: [4688]
@@ -761,18 +831,20 @@
 
 - id: uac-bypass-cmstp
   name: UAC Bypass / AppLocker Bypass via cmstp.exe
-  description: "Detection rule description."
+  description: >
+    cmstp.exe can be used for both UAC bypass and AppLocker bypass.
+    Executes arbitrary code through a crafted INF file.
   severity: critical
   mitre: ["T1548.002 - Bypass User Account Control", "T1218.003 - CMSTP"]
   event_id: [4688]
   process_name: ["cmstp.exe"]
   process_cmdline_regex: "(?i)(\\.inf|/s|/ns|/au)"
 
-
-
 - id: dll-search-order-hijack-paths
   name: DLL Hijacking - Suspicious Write to System Path
-  description: "Detection rule description."
+  description: >
+    Writing known DLL names into system directories (outside Windows\System32).
+    Indicator of DLL search order hijacking attempts.
   severity: high
   mitre: ["T1574.001 - DLL Search Order Hijacking"]
   event_id: [4688]
@@ -780,18 +852,20 @@
 
 - id: dll-side-loading-signed-binary
   name: DLL Side-Loading via Signed Binary
-  description: "Detection rule description."
+  description: >
+    Placement of a malicious DLL next to a legitimately signed binary.
+    Allows the attacker to run under the cover of a trusted process name.
   severity: high
   mitre: ["T1574.002 - DLL Side-Loading"]
   event_id: [4688]
   process_name: ["OneDriveSetup.exe", "Teams.exe", "MicrosoftEdgeUpdate.exe"]
   process_cmdline_regex: "(?i)(\\\\Users\\\\|\\\\Temp\\\\|\\\\AppData\\\\)"
 
-
-
 - id: com-object-hijack
   name: COM Object Hijacking via HKCU
-  description: "Detection rule description."
+  description: >
+    COM registration under HKCU\Software\Classes\CLSID. Used to override
+    system-wide HKLM COM registrations for persistence or UAC bypass.
   severity: high
   mitre: ["T1546.015 - Component Object Model Hijacking"]
   event_id: [4688]
@@ -800,7 +874,9 @@
 
 - id: screensaver-persistence
   name: Screensaver-Based Persistence
-  description: "Detection rule description."
+  description: >
+    Modification of screensaver (.scr) path or related settings.
+    Registry-based screensaver persistence technique.
   severity: high
   mitre: ["T1546.002 - Screensaver"]
   event_id: [4688]
@@ -809,7 +885,9 @@
 
 - id: netsh-helper-dll-persistence
   name: Netsh Helper DLL Persistence
-  description: "Detection rule description."
+  description: >
+    Registration of a netsh helper DLL. The specified DLL is loaded when netsh runs.
+    Can be used for persistence and privilege escalation.
   severity: high
   mitre: ["T1546.007 - Netsh Helper DLL"]
   event_id: [4688]
@@ -818,7 +896,9 @@
 
 - id: image-file-execution-options
   name: Image File Execution Options Injection (IFEO)
-  description: "Detection rule description."
+  description: >
+    IFEO debugger registration. When the target binary starts, the attacker-defined
+    process is launched instead (persistence plus privilege escalation).
   severity: critical
   mitre: ["T1546.012 - Image File Execution Options Injection"]
   event_id: [4688]
@@ -827,17 +907,20 @@
 
 - id: accessibility-feature-backdoor
   name: Accessibility Feature Backdoor (Sticky Keys etc.)
-  description: "Detection rule description."
+  description: >
+    Replacement of accessibility tools such as sethc.exe, utilman.exe, osk.exe,
+    and narrator.exe with cmd.exe or powershell.exe. Classic backdoor technique
+    for unauthenticated access.
   severity: critical
   mitre: ["T1546.008 - Accessibility Features"]
   event_id: [4688]
   process_cmdline_regex: "(?i)(copy|move|ren).*(sethc|utilman|osk|narrator|magnify|displayswitch).*(\\.exe)"
 
-
-
 - id: certutil-decode-download
   name: Certutil Encode/Decode or Download
-  description: "Detection rule description."
+  description: >
+    Base64 encode/decode or HTTP download via certutil.
+    Commonly used for malware delivery and payload obfuscation.
   severity: high
   mitre: ["T1140 - Deobfuscate/Decode Files", "T1105 - Ingress Tool Transfer"]
   event_id: [4688]
@@ -846,7 +929,9 @@
 
 - id: msiexec-remote-payload
   name: MSIExec Remote Payload Execution
-  description: "Detection rule description."
+  description: >
+    Installation or execution of an MSI package via a remote URL or UNC path using msiexec.
+    Common fileless payload delivery technique.
   severity: high
   mitre: ["T1218.007 - Msiexec"]
   event_id: [4688]
@@ -855,7 +940,9 @@
 
 - id: regsvr32-squiblydoo
   name: Regsvr32 Squiblydoo (AppLocker Bypass)
-  description: "Detection rule description."
+  description: >
+    Loading a remote scrobj.dll or COM scriptlet via regsvr32.
+    AppLocker bypass technique commonly known as Squiblydoo.
   severity: critical
   mitre: ["T1218.010 - Regsvr32"]
   event_id: [4688]
@@ -864,7 +951,9 @@
 
 - id: xwizard-dll-execution
   name: xwizard.exe DLL Execution (Proxy)
-  description: "Detection rule description."
+  description: >
+    Loading an unsigned DLL via xwizard.exe.
+    Arbitrary code execution through a trusted Windows binary (LOLBin).
   severity: high
   mitre: ["T1218 - System Binary Proxy Execution"]
   event_id: [4688]
@@ -873,7 +962,8 @@
 
 - id: pcalua-arbitrary-execution
   name: pcalua.exe Arbitrary Command Execution
-  description: "Detection rule description."
+  description: >
+    Execution of a malicious binary through Program Compatibility Assistant (pcalua.exe).
   severity: medium
   mitre: ["T1218 - System Binary Proxy Execution"]
   event_id: [4688]
@@ -882,7 +972,9 @@
 
 - id: forfiles-command-execution
   name: forfiles.exe Command Execution (LOLBin)
-  description: "Detection rule description."
+  description: >
+    Command execution via the /c parameter of forfiles.
+    Technique used to bypass cmd.exe restrictions.
   severity: medium
   mitre: ["T1059.003 - Windows Command Shell"]
   event_id: [4688]
@@ -891,7 +983,9 @@
 
 - id: msdeploy-arbitrary-execution
   name: MSDeploy Arbitrary Code Execution
-  description: "Detection rule description."
+  description: >
+    Code execution through the Web Deploy utility (msdeploy.exe).
+    May bypass AV/EDR controls because it is a trusted Microsoft binary.
   severity: high
   mitre: ["T1218 - System Binary Proxy Execution"]
   event_id: [4688]
@@ -900,18 +994,19 @@
 
 - id: odbcconf-dll-load
   name: odbcconf.exe DLL Load
-  description: "Detection rule description."
+  description: >
+    Loading an unsigned DLL via the REGSVR action of odbcconf.exe.
   severity: high
   mitre: ["T1218.008 - Odbcconf"]
   event_id: [4688]
   process_name: ["odbcconf.exe"]
   process_cmdline_regex: "(?i)(REGSVR|/a|/f)"
 
-
-
 - id: port-scanning-tools
   name: Port Scanning / Network Enumeration Tools
-  description: "Detection rule description."
+  description: >
+    Known port-scanning and network enumeration tools.
+    Commonly used during post-exploitation reconnaissance.
   severity: medium
   mitre: ["T1046 - Network Service Scanning"]
   event_id: [4688]
@@ -919,7 +1014,9 @@
 
 - id: ad-enumeration-tools
   name: Active Directory Enumeration Tools
-  description: "Detection rule description."
+  description: >
+    Known Active Directory enumeration tools. BloodHound ingestors
+    are used to graph and map domain relationships.
   severity: high
   mitre: ["T1087.002 - Domain Account Discovery", "T1069.002 - Domain Groups"]
   event_id: [4688]
@@ -927,7 +1024,9 @@
 
 - id: ldap-enumeration-cmdline
   name: LDAP Enumeration via Command Line
-  description: "Detection rule description."
+  description: >
+    Active Directory enumeration via PowerShell or LDAP tooling.
+    Includes user, group, GPO, and ACL enumeration patterns.
   severity: medium
   mitre: ["T1087 - Account Discovery"]
   event_id: [4688]
@@ -936,17 +1035,19 @@
 
 - id: password-spray-indicator
   name: Password Spray Tool Execution
-  description: "Detection rule description."
+  description: >
+    Known password-spray tools or command-line arguments
+    matching spray behavior patterns.
   severity: critical
   mitre: ["T1110.003 - Password Spraying"]
   event_id: [4688]
   process_name_regex: "(?i)(spray|kerbrute|ruler\\.exe|spraycharles|domainpasswordspray)"
 
-
-
 - id: dotnet-load-from-memory
   name: .NET Assembly Loaded from Memory
-  description: "Detection rule description."
+  description: >
+    Loading a .NET assembly directly from memory via PowerShell.
+    Important step in fileless execution chains.
   severity: critical
   mitre: ["T1620 - Reflective Code Loading"]
   event_id: [4103, 4104]
@@ -955,7 +1056,9 @@
 
 - id: lolbas-compile-csharp
   name: In-Memory C# Compilation via csc.exe/msbuild.exe
-  description: "Detection rule description."
+  description: >
+    Runtime compilation and loading of C# code.
+    Arbitrary code execution through msbuild tasks embedded in XML projects.
   severity: high
   mitre: ["T1127.001 - MSBuild"]
   event_id: [4688]
@@ -964,18 +1067,20 @@
 
 - id: powershell-runspace-evasion
   name: PowerShell Runspace / Custom Host Evasion
-  description: "Detection rule description."
+  description: >
+    Use of the PowerShell runspace API.
+    Custom host implementation intended to bypass traditional PowerShell logging.
   severity: high
   mitre: ["T1059.001 - PowerShell"]
   event_id: [4103, 4104]
   channel: ["Microsoft-Windows-PowerShell/Operational"]
   script_block_regex: "(?i)(RunspaceFactory|CreateRunspace|InitialSessionState|PSHost|DefaultRunspace)"
 
-
-
 - id: rclone-cloud-exfil
   name: Rclone Cloud Exfiltration Tool
-  description: "Detection rule description."
+  description: >
+    Sending data to cloud storage providers via rclone.
+    Commonly used by ransomware groups for double-extortion exfiltration.
   severity: critical
   mitre: ["T1567.002 - Exfiltration to Cloud Storage"]
   event_id: [4688]
@@ -984,7 +1089,9 @@
 
 - id: mega-sync-client
   name: MEGA Sync Client Execution
-  description: "Detection rule description."
+  description: >
+    MEGA cloud synchronization client. Frequently used by attackers
+    as a convenient exfiltration tool.
   severity: high
   mitre: ["T1567.002 - Exfiltration to Cloud Storage"]
   event_id: [4688]
@@ -992,19 +1099,21 @@
 
 - id: data-staged-to-unusual-path
   name: Data Staged to Unusual Directory
-  description: "Detection rule description."
+  description: >
+    Copying data into suspicious directories for staging prior to exfiltration.
+    Large data buildup in Temp, Recycle Bin, or hidden directories is suspicious.
   severity: high
   mitre: ["T1074 - Data Staged"]
   event_id: [4688]
   process_name: ["xcopy.exe", "robocopy.exe", "copy", "7z.exe", "rar.exe"]
   process_cmdline_regex: "(?i)(\\\\Temp\\\\|\\\\Recycle|\\\\\\$Recycle|\\\\ProgramData\\\\[^M]|\\\\Users\\\\Public\\\\)"
 
-
-
-
 - id: corr-recon-then-lateral
   name: "[CORR] Discovery Followed by Lateral Movement"
-  description: "Detection rule description."
+  description: >
+    Discovery followed by lateral movement on the same host within a short window.
+    Establishing SMB, RDP, or WMI access after recon commands is a strong
+    indicator of post-exploitation activity.
   severity: critical
   mitre: ["T1018 - Remote System Discovery", "T1021 - Remote Services"]
   correlation:
@@ -1024,7 +1133,9 @@
 
 - id: corr-lolbin-then-download
   name: "[CORR] LOLBin Execution Followed by File Download"
-  description: "Detection rule description."
+  description: >
+    File download activity on the same host shortly after LOLBin execution.
+    Represents two common stages of a dropper chain.
   severity: critical
   mitre: ["T1218 - System Binary Proxy Execution", "T1105 - Ingress Tool Transfer"]
   correlation:
@@ -1041,11 +1152,11 @@
         event_id: [4688]
         process_cmdline_regex: "(?i)(http[s]?://|downloadstring|downloadfile|urlcache|bitsadmin)"
 
-
-
 - id: corr-enum-then-cred-dump
   name: "[CORR] AD Enumeration Followed by Credential Dump"
-  description: "Detection rule description."
+  description: >
+    Active Directory reconnaissance (BloodHound, net group, ADFind, etc.) followed by
+    a credential-dumping attempt. Classic steps in an attack kill chain.
   severity: critical
   mitre: ["T1087 - Account Discovery", "T1003 - OS Credential Dumping"]
   correlation:
@@ -1062,11 +1173,12 @@
         event_id: [4688]
         process_cmdline_regex: "(?i)(mimikatz|sekurlsa|logonpasswords|lsadump|dcsync|comsvcs.*minidump|procdump.*lsass)"
 
-
-
 - id: corr-full-attack-chain
   name: "[CORR] Full Attack Chain: Logon → Recon → Persistence"
-  description: "Detection rule description."
+  description: >
+    New network logon followed by discovery commands and then creation of a persistence
+    mechanism. These three steps on the same host within a short window strongly
+    indicate active compromise.
   severity: critical
   mitre: ["T1078", "T1082", "T1053", "T1543"]
   correlation:
@@ -1088,11 +1200,11 @@
         event_id: [4688, 4698, 7045, 4697]
         process_name: ["schtasks.exe", "sc.exe", "reg.exe"]
 
-
-
 - id: corr-bruteforce-then-success
   name: "[CORR] Brute Force Followed by Successful Logon"
-  description: "Detection rule description."
+  description: >
+    Repeated failed logon attempts against the same account followed by a successful logon.
+    Indicator of successful brute force or credential stuffing activity.
   severity: critical
   mitre: ["T1110.001 - Password Guessing"]
   correlation:
@@ -1109,11 +1221,11 @@
         event_id: [4624]
         logon_type: [2, 3, 10]
 
-
-
 - id: corr-account-creation-then-group-add
   name: "[CORR] Account Created Then Added to Privileged Group"
-  description: "Detection rule description."
+  description: >
+    A newly created account added to a privileged group shortly afterward.
+    Characteristic behavior of persistence or backdoor account creation.
   severity: critical
   mitre: ["T1136 - Create Account", "T1098 - Account Manipulation"]
   correlation:
@@ -1128,11 +1240,11 @@
         name: added_to_group
         event_id: [4728, 4732, 4756]
 
-
-
 - id: corr-shadow-delete-then-log-clear
   name: "[CORR] Shadow Copy Deletion Followed by Log Clearing"
-  description: "Detection rule description."
+  description: >
+    Shadow copy deletion followed by event log clearing.
+    Common anti-forensics chain observed in the later stages of ransomware operations.
   severity: critical
   mitre: ["T1490 - Inhibit System Recovery", "T1070.001 - Clear Windows Event Logs"]
   correlation:
@@ -1148,11 +1260,11 @@
         name: log_clear
         event_id: [1102, 4719]
 
-
-
 - id: corr-defender-disable-then-download
   name: "[CORR] Defender Disabled Then Payload Downloaded"
-  description: "Detection rule description."
+  description: >
+    Windows Defender or another security control disabled, followed by file download from the network.
+    One of the most common two-step preparations for malware deployment.
   severity: critical
   mitre: ["T1562.001 - Disable or Modify Tools", "T1105 - Ingress Tool Transfer"]
   correlation:
@@ -1169,11 +1281,12 @@
         event_id: [4688]
         process_cmdline_regex: "(?i)(urlcache|downloadstring|downloadfile|bitsadmin.*transfer|curl.*http|wget.*http)"
 
-
-
 - id: corr-multi-log-tamper
   name: "[CORR] Multi-Tool Log Tampering Chain"
-  description: "Detection rule description."
+  description: >
+    Use of multiple log-manipulation tools in a short window
+    (for example wevtutil, auditpol, and sc stop EventLog).
+    Indicator of a broad log-clearing operation.
   severity: critical
   mitre: ["T1070.001 - Clear Windows Event Logs", "T1562.002 - Disable Windows Event Logging"]
   correlation:
@@ -1188,11 +1301,11 @@
       - event-log-service-shutdown
       - audit-policy-changed
 
-
-
 - id: corr-kerberoasting-chain
   name: "[CORR] Kerberoasting Attack Chain"
-  description: "Detection rule description."
+  description: >
+    Kerberoasting kill chain: AD enumeration, SPN query, then RC4 ticket request.
+    These steps in a short window indicate active Kerberoasting activity.
   severity: critical
   mitre: ["T1558.003 - Kerberoasting"]
   correlation:
@@ -1210,11 +1323,12 @@
         ticket_encryption_regex: "0x17"
         failure_code_regex: "0x0"
 
-
-
 - id: pass-the-hash-indicator
   name: Pass-the-Hash Indicator
-  description: "Detection rule description."
+  description: >
+    NTLM logon combined with a null or empty workstation name.
+    Characteristic sign of a Mimikatz Pass-the-Hash attack.
+    ANONYMOUS LOGON is excluded to reduce false positives.
   severity: critical
   mitre: ["T1550.002 - Pass the Hash"]
   event_id: [4624]
@@ -1229,7 +1343,9 @@
 
 - id: corr-pth-then-lateral
   name: "[CORR] Pass-the-Hash Followed by Lateral Movement"
-  description: "Detection rule description."
+  description: >
+    Network access from the same host to other systems after a Pass-the-Hash indicator.
+    Suggests a lateral movement chain initiated through PTH.
   severity: critical
   mitre: ["T1550.002 - Pass the Hash", "T1021 - Remote Services"]
   correlation:
@@ -1246,11 +1362,11 @@
         logon_type: [3]
         exclude_user: ["ANONYMOUS LOGON", "NT AUTHORITY\\SYSTEM"]
 
-
-
 - id: corr-persist-then-execute
   name: "[CORR] Persistence Mechanism Created Then Immediately Executed"
-  description: "Detection rule description."
+  description: >
+    Execution of the same binary shortly after creating a service or scheduled task.
+    Suggests the attacker is testing or immediately using the persistence mechanism.
   severity: critical
   mitre: ["T1543.003 - Windows Service", "T1053.005 - Scheduled Task"]
   correlation:
@@ -1266,11 +1382,12 @@
         event_id: [4688]
         exclude_process: ["svchost.exe", "services.exe", "taskeng.exe"]
 
-
-
 - id: corr-offhours-logon-activity
   name: "[CORR] Off-Hours Logon Followed by Sensitive Activity"
-  description: "Detection rule description."
+  description: >
+    Network logon outside business hours (night or weekend) followed by
+    sensitive activity such as credential dumping, shadow copy deletion, or exfiltration tooling.
+    Indicator of insider threat or attacker activity.
   severity: high
   mitre: ["T1078 - Valid Accounts"]
   correlation:
@@ -1291,11 +1408,11 @@
         event_id: [4688]
         process_cmdline_regex: "(?i)(mimikatz|lsass|vssadmin|rclone|7z|rar|certutil|bitsadmin|wevtutil)"
 
-
-
 - id: corr-password-spray-threshold
   name: "[CORR] Password Spray - Multiple Accounts Failed Logon"
-  description: "Detection rule description."
+  description: >
+    Failed logon attempts from the same source host to multiple target accounts
+    within a short window. Threshold-based detection for password spraying.
   severity: critical
   mitre: ["T1110.003 - Password Spraying"]
   correlation:
@@ -1309,7 +1426,9 @@
 
 - id: corr-account-lockout-spray
   name: "[CORR] Multiple Account Lockouts (Spray Indicator)"
-  description: "Detection rule description."
+  description: >
+    Multiple accounts locked out in a short time window.
+    Indicator of a password-spray or brute-force campaign.
   severity: high
   mitre: ["T1110 - Brute Force"]
   correlation:
@@ -1320,11 +1439,12 @@
     min_count: 5
     event_id: [4740]
 
-
-
 - id: corr-ransomware-prep-chain
   name: "[CORR] Ransomware Preparation Chain"
-  description: "Detection rule description."
+  description: >
+    Two or more of these activities observed in a short window: shadow copy deletion,
+    backup tool abuse, security disablement, or log clearing.
+    Strong indicator of ransomware pre-encryption preparation.
   severity: critical
   mitre: ["T1490 - Inhibit System Recovery", "T1562 - Impair Defenses", "T1070 - Indicator Removal"]
   correlation:
@@ -1343,7 +1463,10 @@
 
 - id: corr-living-off-land-burst
   name: "[CORR] LOLBin Burst - Multiple LOLBins in Short Window"
-  description: "Detection rule description."
+  description: >
+    Three or more different LOLBins executed in a short window.
+    Characteristic behavior of an automated attack framework such as
+    Cobalt Strike or Havoc.
   severity: high
   mitre: ["T1218 - System Binary Proxy Execution"]
   correlation:

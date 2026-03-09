@@ -3,25 +3,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { createPortal } from "react-dom";
 import { Drawer } from "../ui/drawer";
 import { api } from "../lib/api";
 import { EventFilters } from "./event-filters";
 import { Card } from "../ui/card";
 
 const PAGE_SIZE = 500;
-const EVENT_ID_INFO: Record<number, string> = {
-  1: "Sysmon process creation event.",
-  1100: "Windows Event Log service was shut down.",
+const CRITICAL_EVENT_IDS = new Set([
+  1100, 1102, 4625, 4719, 4724, 4726, 4740
+]);
+const HIGH_RISK_EVENT_IDS = new Set([
+  4648, 4672, 4697, 4698, 4702, 7045, 4728, 4729, 4732, 4733, 4756, 4757
+]);
+const SUCCESS_EVENT_IDS = new Set([4624, 4720, 4722, 5140]);
+const TELEMETRY_EVENT_IDS = new Set([1, 4103, 4104, 4616, 4688]);
+
+const SECURITY_EVENT_INFO: Record<number, string> = {
   1102: "The Security event log was cleared.",
-  1104: "The Security event log is full.",
-  4103: "PowerShell module logging event.",
-  4104: "PowerShell script block logging event.",
   4616: "System time was changed.",
   4624: "An account was successfully logged on.",
   4625: "An account failed to log on.",
   4648: "A logon was attempted using explicit credentials.",
   4672: "Special privileges assigned to a new logon.",
-  4688: "A new process has been created.",
+  4688: "A new process has been created (Security audit).",
   4697: "A service was installed in the system.",
   4698: "A scheduled task was created.",
   4702: "A scheduled task was updated.",
@@ -38,13 +43,85 @@ const EVENT_ID_INFO: Record<number, string> = {
   4740: "A user account was locked out.",
   4756: "A member was added to a privileged universal group.",
   4757: "A member was removed from a privileged universal group.",
-  5140: "A network share object was accessed.",
+  5140: "A network share object was accessed."
+};
+
+const SYSTEM_EVENT_INFO: Record<number, string> = {
+  1: "System configuration/time change (provider-specific).",
+  1100: "Windows Event Log service was shut down.",
+  6005: "The Event Log service was started.",
+  6006: "The Event Log service was stopped.",
   7045: "A new Windows service was installed."
 };
 
-function eventIdSummary(eventId?: number) {
+const APPLICATION_EVENT_INFO: Record<number, string> = {
+  1000: "Application Error (faulting application/crash).",
+  1001: "Windows Error Reporting event.",
+  1026: ".NET Runtime exception."
+};
+
+const SYSMON_EVENT_INFO: Record<number, string> = {
+  1: "Sysmon process creation event.",
+  3: "Sysmon network connection event.",
+  7: "Sysmon image loaded event.",
+  8: "Sysmon CreateRemoteThread event.",
+  10: "Sysmon process access event.",
+  11: "Sysmon file create event.",
+  12: "Sysmon registry object create/delete event.",
+  13: "Sysmon registry value set event.",
+  22: "Sysmon DNS query event."
+};
+
+type EventSummaryInput = {
+  event_id?: number;
+  channel?: string;
+  source?: string;
+};
+
+function eventIdSummary(event: EventSummaryInput) {
+  const eventId = event.event_id;
   if (!eventId) return "No Event ID.";
-  return EVENT_ID_INFO[eventId] || "Known Windows event. No short summary is defined yet.";
+
+  const channel = (event.channel || "").toLowerCase();
+  const source = (event.source || "").toLowerCase();
+  const isSysmon =
+    channel.includes("sysmon") ||
+    source.includes("sysmon") ||
+    source.includes("sysmon64");
+
+  if (isSysmon) {
+    return (
+      SYSMON_EVENT_INFO[eventId] ||
+      "Sysmon event (provider-specific). No short summary is defined yet."
+    );
+  }
+
+  if (source.includes("kernel-general") && eventId === 1) {
+    return "System time was changed (Kernel-General).";
+  }
+
+  if (channel.includes("security")) {
+    return (
+      SECURITY_EVENT_INFO[eventId] ||
+      "Security event. No short summary is defined yet."
+    );
+  }
+
+  if (channel.includes("system")) {
+    return (
+      SYSTEM_EVENT_INFO[eventId] ||
+      "System event. No short summary is defined yet."
+    );
+  }
+
+  if (channel.includes("application")) {
+    return (
+      APPLICATION_EVENT_INFO[eventId] ||
+      "Application event. No short summary is defined yet."
+    );
+  }
+
+  return "Windows event (channel/provider-specific). No short summary is defined yet.";
 }
 
 export default function EventTable({ filters }: { filters: EventFilters }) {
@@ -78,8 +155,10 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
 
   const eventBadgeClass = (eventId?: number) => {
     if (!eventId) return "badge badge-muted";
-    if (eventId === 4625 || eventId === 1102) return "badge badge-danger";
-    if (eventId === 4688 || eventId === 7045) return "badge badge-accent";
+    if (CRITICAL_EVENT_IDS.has(eventId)) return "badge badge-critical";
+    if (HIGH_RISK_EVENT_IDS.has(eventId)) return "badge badge-warning";
+    if (SUCCESS_EVENT_IDS.has(eventId)) return "badge badge-success";
+    if (TELEMETRY_EVENT_IDS.has(eventId)) return "badge badge-accent";
     return "badge badge-muted";
   };
 
@@ -118,6 +197,33 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [items, selected]);
+
+  const eventPopupPortal =
+    eventIdPopup && typeof window !== "undefined"
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setEventIdPopup(null)}
+            role="presentation"
+          >
+            <div
+              className="absolute rounded-lg border border-slate-700 bg-slate-950/95 p-3 shadow-2xl"
+              style={{
+                left: `${eventIdPopup.left}px`,
+                top: `${eventIdPopup.top}px`,
+                width: "320px"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-xs uppercase tracking-[0.14em] text-muted mb-1">
+                Event ID {eventIdPopup.id}
+              </div>
+              <div className="text-sm text-slate-200">{eventIdPopup.text}</div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <Card className="overflow-hidden">
@@ -176,25 +282,33 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
                           className={eventBadgeClass(event.event_id)}
                           onClick={(e) => {
                             e.stopPropagation();
-                            const rect = (
-                              e.currentTarget as HTMLButtonElement
-                            ).getBoundingClientRect();
                             const popupWidth = 320;
+                            const popupHeight = 96;
                             const margin = 12;
-                            const left = Math.min(
-                              Math.max(
+                            const offset = 10;
+
+                            let left = e.clientX + offset;
+                            if (left + popupWidth > window.innerWidth - margin) {
+                              left = Math.max(
                                 margin,
-                                rect.left + rect.width / 2 - popupWidth / 2
-                              ),
-                              window.innerWidth - popupWidth - margin
-                            );
-                            const top = Math.min(
-                              rect.bottom + 10,
-                              window.innerHeight - 110
-                            );
+                                e.clientX - popupWidth - offset
+                              );
+                            }
+
+                            let top = e.clientY + offset;
+                            if (top + popupHeight > window.innerHeight - margin) {
+                              top = Math.max(
+                                margin,
+                                e.clientY - popupHeight - offset
+                              );
+                            }
                             setEventIdPopup({
                               id: event.event_id,
-                              text: eventIdSummary(event.event_id),
+                              text: eventIdSummary({
+                                event_id: event.event_id,
+                                channel: event.channel,
+                                source: event.source
+                              }),
                               left,
                               top
                             });
@@ -291,28 +405,7 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
           </div>
         ) : null}
       </Drawer>
-      {eventIdPopup && (
-        <div
-          className="fixed inset-0 z-50"
-          onClick={() => setEventIdPopup(null)}
-          role="presentation"
-        >
-          <div
-            className="absolute rounded-lg border border-slate-700 bg-slate-950/95 p-3 shadow-2xl"
-            style={{
-              left: `${eventIdPopup.left}px`,
-              top: `${eventIdPopup.top}px`,
-              width: "320px"
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-xs uppercase tracking-[0.14em] text-muted mb-1">
-              Event ID {eventIdPopup.id}
-            </div>
-            <div className="text-sm text-slate-200">{eventIdPopup.text}</div>
-          </div>
-        </div>
-      )}
+      {eventPopupPortal}
     </Card>
   );
 }
