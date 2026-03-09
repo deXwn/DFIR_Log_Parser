@@ -149,16 +149,23 @@
 
 - id: explicit-credentials-used
   name: Explicit Credentials Used
-  description: 4648 -> logon attempt using explicit credentials (runas, pass-the-hash).
-  severity: high
-  mitre: ["T1078 - Valid Accounts", "T1550.002 - Pass the Hash"]
+  description: >
+    Event ID 4648 indicates a logon attempt using explicit credentials.
+    Common in administration and application access workflows, so this rule
+    excludes routine LSASS and svchost activity to reduce noise.
+  severity: medium
+  mitre: ["T1078 - Valid Accounts"]
   event_id: [4648]
   channel: ["Security"]
+  exclude_process: ["lsass.exe", "svchost.exe"]
 
 - id: special-privileges-assigned
   name: Special Privileges Assigned to New Logon
-  description: 4672 -> privileged token assignment after logon.
-  severity: high
+  description: >
+    Event ID 4672 indicates that a non-service account received a privileged token
+    at logon. This is often benign for administrators, but it is useful context
+    when paired with explicit-credential use or unusual logon activity.
+  severity: medium
   mitre: ["T1134 - Access Token Manipulation"]
   event_id: [4672]
   channel: ["Security"]
@@ -169,6 +176,35 @@
     - "LOCAL SERVICE"
     - "NT AUTHORITY\\NETWORK SERVICE"
     - "NETWORK SERVICE"
+
+- id: corr-explicit-creds-then-privileged-logon
+  name: "[CORR] Explicit Credentials Followed by Privileged Logon"
+  description: >
+    A 4648 explicit-credential event followed shortly by a 4672 privileged logon
+    on the same host. This is a stronger signal than either event alone and is
+    more aligned with lateral movement or privileged access activity.
+  severity: high
+  mitre: ["T1078 - Valid Accounts", "T1134 - Access Token Manipulation"]
+  correlation:
+    type: sequence
+    window: 120
+    group_by: [host]
+    steps:
+      - step: 1
+        name: explicit_creds
+        event_id: [4648]
+        channel: ["Security"]
+      - step: 2
+        name: privileged_logon
+        event_id: [4672]
+        channel: ["Security"]
+        exclude_user:
+          - "NT AUTHORITY\\SYSTEM"
+          - "SYSTEM"
+          - "NT AUTHORITY\\LOCAL SERVICE"
+          - "LOCAL SERVICE"
+          - "NT AUTHORITY\\NETWORK SERVICE"
+          - "NETWORK SERVICE"
 
 - id: audit-policy-changed
   name: Audit Policy Changed
