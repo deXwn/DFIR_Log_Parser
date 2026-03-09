@@ -10,11 +10,11 @@
   --panel-accent: #13213c;
   --text: #e7eefb;
   --muted: #9fb0c7;
-  --accent: #38bdf8;
-  --accent-strong: #0ea5e9;
+  --accent: #fb923c;
+  --accent-strong: #ea580c;
   --danger: #f87171;
   --ok: #22c55e;
-  --ring: rgba(56, 189, 248, 0.38);
+  --ring: rgba(251, 146, 60, 0.34);
 }
 
 * {
@@ -30,7 +30,8 @@ body {
   background:
     radial-gradient(circle at 8% 6%, rgba(34, 211, 238, 0.11), transparent 34%),
     radial-gradient(circle at 92% 0%, rgba(59, 130, 246, 0.14), transparent 28%),
-    radial-gradient(circle at 24% 94%, rgba(16, 185, 129, 0.1), transparent 38%),
+    radial-gradient(circle at 82% 12%, rgba(251, 146, 60, 0.14), transparent 22%),
+    radial-gradient(circle at 24% 94%, rgba(16, 185, 129, 0.08), transparent 38%),
     linear-gradient(180deg, var(--bg-mid), var(--bg));
 }
 
@@ -60,8 +61,8 @@ body {
 }
 
 .input:focus {
-  border-color: rgba(56, 189, 248, 0.58);
-  box-shadow: 0 0 0 2px var(--ring), inset 0 0 0 1px rgba(56, 189, 248, 0.45);
+  border-color: rgba(251, 146, 60, 0.58);
+  box-shadow: 0 0 0 2px var(--ring), inset 0 0 0 1px rgba(251, 146, 60, 0.45);
 }
 
 .glass {
@@ -99,9 +100,9 @@ body {
 }
 
 .badge-accent {
-  background: rgba(56, 189, 248, 0.18);
-  color: #8edcff;
-  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(251, 146, 60, 0.18);
+  color: #ffd3b0;
+  border: 1px solid rgba(251, 146, 60, 0.45);
 }
 
 .badge-danger {

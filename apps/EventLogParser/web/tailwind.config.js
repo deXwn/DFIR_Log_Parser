@@ -9,9 +9,9 @@ module.exports = {
       colors: {
         panel: "#0f172a",
         panelAccent: "#13213c",
-        accent: "#38bdf8",
+        accent: "#fb923c",
         danger: "#f87171",
-        primary: "#0ea5e9",
+        primary: "#ea580c",
         muted: "#9fb0c7"
       }
     }
