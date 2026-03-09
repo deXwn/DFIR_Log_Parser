@@ -5,9 +5,24 @@ import { Card } from "../../ui/card";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 
+type IngestApiResponse = {
+  ingested: number;
+  duration_ms: number;
+  parsed: number;
+};
+
+type IngestBatchResult = {
+  totalFiles: number;
+  successCount: number;
+  failed: { file: string; error: string }[];
+  totalIngested: number;
+  totalParsed: number;
+  totalDurationMs: number;
+};
+
 export default function IngestPage() {
   const [path, setPath] = useState("event_log");
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [channel, setChannel] = useState<string>("");
   const [threads, setThreads] = useState<number | undefined>(undefined);
 
@@ -17,22 +32,58 @@ export default function IngestPage() {
     enabled: false
   });
 
-  const ingestMutation = useMutation<{
-    ingested: number;
-    duration_ms: number;
-    parsed: number;
-  }>({
-    mutationFn: () =>
-      api.post("/ingest", {
-        path: selectedFile,
-        channel: channel || undefined,
-        threads
-      })
+  const ingestMutation = useMutation<IngestBatchResult, Error, string[]>({
+    mutationFn: async (files) => {
+      let totalIngested = 0;
+      let totalParsed = 0;
+      let totalDurationMs = 0;
+      const failed: { file: string; error: string }[] = [];
+
+      for (const file of files) {
+        try {
+          const result = await api.post<IngestApiResponse>("/ingest", {
+            path: file,
+            channel: channel || undefined,
+            threads
+          });
+          totalIngested += result.ingested;
+          totalParsed += result.parsed;
+          totalDurationMs += result.duration_ms;
+        } catch (err) {
+          failed.push({
+            file,
+            error: err instanceof Error ? err.message : "Unknown ingest error"
+          });
+        }
+      }
+
+      return {
+        totalFiles: files.length,
+        successCount: files.length - failed.length,
+        failed,
+        totalIngested,
+        totalParsed,
+        totalDurationMs
+      };
+    }
   });
 
   const handleList = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     listQuery.refetch();
+  };
+
+  const toggleFile = (file: string) => {
+    setSelectedFiles((prev) =>
+      prev.includes(file) ? prev.filter((f) => f !== file) : [...prev, file]
+    );
+  };
+
+  const toggleAll = (files: string[]) => {
+    if (files.length === 0) return;
+    setSelectedFiles((prev) =>
+      prev.length === files.length ? [] : [...files]
+    );
   };
 
   return (
@@ -92,15 +143,17 @@ export default function IngestPage() {
             List
           </button>
           <button
-            disabled={!selectedFile || ingestMutation.isPending}
-            onClick={() => ingestMutation.mutate()}
+            disabled={selectedFiles.length === 0 || ingestMutation.isPending}
+            onClick={() => ingestMutation.mutate([...selectedFiles])}
             className={`px-4 py-2 rounded-lg font-semibold ${
-              selectedFile
+              selectedFiles.length > 0
                 ? "bg-accent text-black interactive"
                 : "bg-gray-700 text-gray-400 cursor-not-allowed"
             }`}
           >
-            {ingestMutation.isPending ? "Processing..." : "Ingest"}
+            {ingestMutation.isPending
+              ? "Processing..."
+              : `Ingest Selected (${selectedFiles.length})`}
           </button>
         </div>
         {listQuery.isFetching && (
@@ -117,31 +170,68 @@ export default function IngestPage() {
           </div>
         )}
         {ingestMutation.data && (
-          <div className="text-sm text-accent">
-            {ingestMutation.data.ingested} records ingested (
-            {ingestMutation.data.duration_ms} ms) - {ingestMutation.data.parsed} parsed
+          <div className="space-y-1 text-sm">
+            <div className="text-accent">
+              Ingest completed: {ingestMutation.data.successCount}/
+              {ingestMutation.data.totalFiles} files succeeded.
+            </div>
+            <div className="text-slate-300">
+              {ingestMutation.data.totalIngested} records ingested (
+              {ingestMutation.data.totalDurationMs} ms) -{" "}
+              {ingestMutation.data.totalParsed} parsed
+            </div>
+            {ingestMutation.data.failed.length > 0 && (
+              <div className="text-danger">
+                Failed files:{" "}
+                {ingestMutation.data.failed
+                  .map((f) => `${f.file} (${f.error})`)
+                  .join(", ")}
+              </div>
+            )}
           </div>
         )}
       </Card>
 
       {(() => {
         const files = listQuery.data?.files ?? [];
+        const allSelected = files.length > 0 && selectedFiles.length === files.length;
         return files.length > 0 ? (
         <Card className="p-4">
           <div className="text-sm text-muted mb-2">
-            {files.length} EVTX files found. Select one file.
+            {files.length} EVTX files found. Select one or more files.
           </div>
           <div className="max-h-[400px] overflow-auto border border-black/40 rounded-lg">
             <table className="w-full text-sm">
+              <thead className="border-b border-black/40">
+                <tr className="text-left text-xs uppercase tracking-[0.08em] text-muted">
+                  <th className="w-12 px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={() => toggleAll(files)}
+                      aria-label="Select all EVTX files"
+                    />
+                  </th>
+                  <th className="px-3 py-2">File</th>
+                </tr>
+              </thead>
               <tbody>
                 {files.map((f: string) => (
                   <tr
                     key={f}
                     className={`cursor-pointer border-b border-black/30 hover:bg-black/30 ${
-                      selectedFile === f ? "bg-accent/15" : ""
+                      selectedFiles.includes(f) ? "bg-accent/15" : ""
                     }`}
-                    onClick={() => setSelectedFile(f)}
+                    onClick={() => toggleFile(f)}
                   >
+                    <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedFiles.includes(f)}
+                        onChange={() => toggleFile(f)}
+                        aria-label={`Select ${f}`}
+                      />
+                    </td>
                     <td className="px-3 py-2">{f}</td>
                   </tr>
                 ))}

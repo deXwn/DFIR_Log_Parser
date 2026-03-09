@@ -44,6 +44,12 @@ export default function TopHeader() {
         </div>
 
         <div className="flex items-center gap-2 text-xs md:text-sm">
+          <a
+            href="http://localhost:8899/"
+            className="rounded-lg border border-slate-700/70 bg-slate-900/55 px-3 py-1.5 font-medium text-slate-100 transition hover:border-accent/45 hover:text-sky-100"
+          >
+            Back to Toolkit
+          </a>
           <Link
             href="/events"
             className="rounded-lg border border-slate-700/70 bg-slate-900/55 px-3 py-1.5 font-medium text-slate-100 transition hover:border-accent/45 hover:text-sky-100"
