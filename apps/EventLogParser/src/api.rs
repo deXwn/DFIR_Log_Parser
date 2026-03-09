@@ -3,7 +3,7 @@ use crate::error::AppError;
 use crate::ingest::{self, IngestStats};
 use crate::models::{
     AggregatedLogon, CorrelatedLogon, Event, EventQuery, IngestRequest, IngestResponse,
-    ListEvtxRequest, ListEvtxResponse, Paginated, ReportRequest, ReportResponse, SearchQuery,
+    ListEvtxFile, ListEvtxRequest, ListEvtxResponse, Paginated, ReportRequest, ReportResponse, SearchQuery,
     StatsResponse, SuspiciousEvent, TimelineBucket, TimelineQuery, DeleteRequest, DeleteResponse,
     DetectionMatch, CustomReportRequest, CustomReportResponse, CustomReportHtmlResponse,
 };
@@ -174,7 +174,7 @@ async fn list_evtx_handler(
     }
 
     let dir = canonical.clone();
-    let files = tokio::task::spawn_blocking(move || -> Result<Vec<String>, AppError> {
+    let files = tokio::task::spawn_blocking(move || -> Result<Vec<ListEvtxFile>, AppError> {
         let mut entries = Vec::new();
         for entry in std::fs::read_dir(&dir)? {
             let entry = entry?;
@@ -186,11 +186,18 @@ async fn list_evtx_handler(
                     .map(|s| s.eq_ignore_ascii_case("evtx"))
                     .unwrap_or(false)
                 {
-                    entries.push(p.to_string_lossy().to_string());
+                    entries.push(ListEvtxFile {
+                        path: p.to_string_lossy().to_string(),
+                        size_bytes: entry.metadata()?.len(),
+                    });
                 }
             }
         }
-        entries.sort();
+        entries.sort_by(|a, b| {
+            b.size_bytes
+                .cmp(&a.size_bytes)
+                .then_with(|| a.path.cmp(&b.path))
+        });
         Ok(entries)
     })
     .await

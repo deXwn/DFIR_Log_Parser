@@ -16,12 +16,11 @@ Both tools are started from one launcher and exposed through one landing page.
 5. Prerequisites
 6. Installation
 7. Startup
-8. URLs
-9. Environment Variables
-10. Daily Workflow
-11. Troubleshooting
-12. Operations Notes
-13. Useful Commands
+8. Daily Workflow
+9. Usage (Web Import)
+10. URLs
+11. Environment Variables
+12. Troubleshooting
 
 ## Purpose
 
@@ -250,6 +249,49 @@ If first startup is slow due to builds/dependency install:
 STARTUP_TIMEOUT_SECS=900 ./start.sh
 ```
 
+## Daily Workflow
+
+1. Start services with `./start.sh`.
+2. Open `http://localhost:8899`.
+3. Select the tool:
+   - Event-focused analysis -> Event Log Parser
+   - Large text-log analysis -> Log Parser
+4. Import data from the web UI (see `Usage (Web Import)` below).
+5. Run analysis and exports.
+6. Stop all services with `Ctrl+C`.
+
+## Usage (Web Import)
+
+### EVTX Parser (EventLogParser) Import Flow
+
+1. Open `http://localhost:3000`.
+2. Go to `Ingest`.
+3. In `EVTX folder path`, enter your EVTX directory (for example `event_log` or an absolute path).
+4. Click `List`.
+5. Select one or more files from the table.
+6. Click `Ingest Selected`.
+7. After ingest completes, move to `Events`, `Search`, `Timeline`, or `Detections`.
+
+![alt text](image.png)
+
+```md
+![EVTX Ingest Screen](docs/images/evtx-ingest.png)
+```
+
+### Log Parser Import Flow
+
+1. Open `http://localhost:8800`.
+2. In `Root path`, enter the directory containing your log files.
+3. Optionally set keywords, exclusions, status/IP filters, and page size.
+4. Click `Search` to parse and load results.
+5. For detections, open `Detection`, provide/select rules, then run detection.
+
+![alt text](image-1.png)
+
+```md
+![Log Parser Search Screen](docs/images/log-parser-search.png)
+```
+
 ## URLs
 
 - Landing page: `http://localhost:8899`
@@ -275,16 +317,6 @@ Supported by `start.sh`:
   - Event frontend API base URL
 - `BIND_ADDRESS`
   - Log Parser bind address
-
-## Daily Workflow
-
-1. Start services with `./start.sh`.
-2. Open `http://localhost:8899`.
-3. Select the tool:
-   - Event-focused analysis -> Event Log Parser
-   - Large text-log analysis -> Log Parser
-4. Run analysis and exports.
-5. Stop all services with `Ctrl+C`.
 
 ## Troubleshooting
 
@@ -325,35 +357,4 @@ Use a larger timeout if needed:
 
 ```bash
 STARTUP_TIMEOUT_SECS=1200 ./start.sh
-```
-
-## Operations Notes
-
-- Keep this suite local for investigation work.
-- Stop services cleanly with `Ctrl+C` to avoid orphan processes.
-- If you run multiple instances, use separate ports per instance.
-- Keep logs under `DFIR_suite/logs/` for easier triage.
-
-## Useful Commands
-
-```bash
-# One-time automatic installation
-./setup.sh
-
-# Start suite
-./start.sh
-
-# Start suite with automatic port cleanup
-AUTO_KILL_PORTS=1 ./start.sh
-
-# Check active listeners for suite ports
-ss -ltnp | grep -E ":3000|:8080|:8800|:8899"
-
-# Stop any leftover listeners on suite ports (manual fallback)
-ss -ltnp 2>/dev/null \
-  | grep -E ":3000|:8080|:8800|:8899" \
-  | grep -Eo "pid=[0-9]+" \
-  | cut -d= -f2 \
-  | sort -u \
-  | xargs -r kill
 ```

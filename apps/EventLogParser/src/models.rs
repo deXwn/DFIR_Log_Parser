@@ -36,7 +36,13 @@ pub struct ListEvtxRequest {
 #[derive(Debug, Serialize)]
 pub struct ListEvtxResponse {
     pub path: String,
-    pub files: Vec<String>,
+    pub files: Vec<ListEvtxFile>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ListEvtxFile {
+    pub path: String,
+    pub size_bytes: u64,
 }
 
 #[derive(Debug, Deserialize)]

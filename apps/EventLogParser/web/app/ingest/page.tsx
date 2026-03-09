@@ -11,6 +11,11 @@ type IngestApiResponse = {
   parsed: number;
 };
 
+type EvtxListItem = {
+  path: string;
+  size_bytes: number;
+};
+
 type IngestBatchResult = {
   totalFiles: number;
   successCount: number;
@@ -26,7 +31,7 @@ export default function IngestPage() {
   const [channel, setChannel] = useState<string>("");
   const [threads, setThreads] = useState<number | undefined>(undefined);
 
-  const listQuery = useQuery<{ path: string; files: string[] }>({
+  const listQuery = useQuery<{ path: string; files: EvtxListItem[] }>({
     queryKey: ["list-evtx", path],
     queryFn: () => api.post("/list-evtx", { path }),
     enabled: false
@@ -84,6 +89,18 @@ export default function IngestPage() {
     setSelectedFiles((prev) =>
       prev.length === files.length ? [] : [...files]
     );
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    const units = ["KB", "MB", "GB", "TB"];
+    let size = bytes / 1024;
+    let unitIdx = 0;
+    while (size >= 1024 && unitIdx < units.length - 1) {
+      size /= 1024;
+      unitIdx += 1;
+    }
+    return `${size.toFixed(size >= 10 ? 1 : 2)} ${units[unitIdx]}`;
   };
 
   return (
@@ -194,11 +211,13 @@ export default function IngestPage() {
 
       {(() => {
         const files = listQuery.data?.files ?? [];
+        const filePaths = files.map((f) => f.path);
         const allSelected = files.length > 0 && selectedFiles.length === files.length;
         return files.length > 0 ? (
         <Card className="p-4">
           <div className="text-sm text-muted mb-2">
-            {files.length} EVTX files found. Select one or more files.
+            {files.length} EVTX files found. Select one or more files. Sorted by
+            size (largest to smallest).
           </div>
           <div className="max-h-[400px] overflow-auto border border-black/40 rounded-lg">
             <table className="w-full text-sm">
@@ -208,31 +227,35 @@ export default function IngestPage() {
                     <input
                       type="checkbox"
                       checked={allSelected}
-                      onChange={() => toggleAll(files)}
+                      onChange={() => toggleAll(filePaths)}
                       aria-label="Select all EVTX files"
                     />
                   </th>
                   <th className="px-3 py-2">File</th>
+                  <th className="w-36 px-3 py-2 text-right">Size</th>
                 </tr>
               </thead>
               <tbody>
-                {files.map((f: string) => (
+                {files.map((file) => (
                   <tr
-                    key={f}
+                    key={file.path}
                     className={`cursor-pointer border-b border-black/30 hover:bg-black/30 ${
-                      selectedFiles.includes(f) ? "bg-accent/15" : ""
+                      selectedFiles.includes(file.path) ? "bg-accent/15" : ""
                     }`}
-                    onClick={() => toggleFile(f)}
+                    onClick={() => toggleFile(file.path)}
                   >
                     <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
-                        checked={selectedFiles.includes(f)}
-                        onChange={() => toggleFile(f)}
-                        aria-label={`Select ${f}`}
+                        checked={selectedFiles.includes(file.path)}
+                        onChange={() => toggleFile(file.path)}
+                        aria-label={`Select ${file.path}`}
                       />
                     </td>
-                    <td className="px-3 py-2">{f}</td>
+                    <td className="px-3 py-2">{file.path}</td>
+                    <td className="px-3 py-2 text-right">
+                      <span className="badge badge-muted">{formatBytes(file.size_bytes)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
