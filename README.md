@@ -274,7 +274,7 @@ Store documentation screenshots under `docs/images/` to keep the project root cl
 6. Click `Ingest Selected`.
 7. After ingest completes, move to `Events`, `Search`, `Timeline`, or `Detections`.
 
-<img src="![alt text](image.png)" />
+<img src="docs/images/evtx-ingest.png" />
 
 ### Log Parser Import Flow
 
