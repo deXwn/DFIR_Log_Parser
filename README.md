@@ -262,6 +262,8 @@ STARTUP_TIMEOUT_SECS=900 ./start.sh
 
 ## Usage (Web Import)
 
+Store documentation screenshots under `docs/images/` to keep the project root clean.
+
 ### EVTX Parser (EventLogParser) Import Flow
 
 1. Open `http://localhost:3000`.
@@ -272,11 +274,7 @@ STARTUP_TIMEOUT_SECS=900 ./start.sh
 6. Click `Ingest Selected`.
 7. After ingest completes, move to `Events`, `Search`, `Timeline`, or `Detections`.
 
-![alt text](image.png)
-
-```md
-![EVTX Ingest Screen](docs/images/evtx-ingest.png)
-```
+<img src="docs/images/evtx-ingest.png" />
 
 ### Log Parser Import Flow
 
@@ -286,11 +284,7 @@ STARTUP_TIMEOUT_SECS=900 ./start.sh
 4. Click `Search` to parse and load results.
 5. For detections, open `Detection`, provide/select rules, then run detection.
 
-![alt text](image-1.png)
-
-```md
-![Log Parser Search Screen](docs/images/log-parser-search.png)
-```
+<img src="docs/images/log-parser-search.png" />
 
 ## URLs
 
