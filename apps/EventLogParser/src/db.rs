@@ -277,7 +277,22 @@ pub fn fetch_process_events(
         SELECT id, event_id, timestamp, computer, channel, record_id, level, opcode, task,
                user, sid, keywords, source, ingest_path, event_data_json, raw_xml
         FROM events
-        WHERE event_id IN (4688, 1)
+        WHERE
+          (
+            event_id = 4688
+            AND LOWER(COALESCE(channel, '')) = 'security'
+          )
+          OR
+          (
+            event_id = 1
+            AND (
+              LOWER(COALESCE(channel, '')) LIKE '%sysmon%'
+              OR LOWER(COALESCE(source, '')) LIKE '%sysmon%'
+              OR json_extract(event_data_json, '$.Event.EventData.ProcessGuid') IS NOT NULL
+              OR json_extract(event_data_json, '$.Event.EventData.ParentProcessGuid') IS NOT NULL
+              OR json_extract(event_data_json, '$.Event.EventData.Image') IS NOT NULL
+            )
+          )
         ORDER BY timestamp DESC
         LIMIT ?1 OFFSET ?2;
         "#,

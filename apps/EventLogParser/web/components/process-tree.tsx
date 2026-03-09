@@ -26,6 +26,13 @@ type ProcNode = {
 };
 
 type ProcLink = { source: string; target: string };
+type GraphStats = {
+  totalEvents: number;
+  process4688: number;
+  sysmonProcessCreate: number;
+  withParentField: number;
+  uniqueHosts: number;
+};
 
 const LOLBINS = [
   "powershell.exe",
@@ -70,14 +77,42 @@ function firstPid(ed: any, keys: string[]): number | undefined {
   return undefined;
 }
 
-function buildGraph(events: any[]): { nodes: ProcNode[]; links: ProcLink[] } {
+function normalizeEventData(rawEventData: any): Record<string, any> {
+  if (!rawEventData) return {};
+  if (Array.isArray(rawEventData.Data)) {
+    const normalized: Record<string, any> = {};
+    for (const item of rawEventData.Data) {
+      if (!item || typeof item !== "object") continue;
+      const attrs = item["#attributes"] || {};
+      const name = attrs.Name || item["@Name"];
+      const value = item["#text"] ?? item["value"] ?? item["_text"] ?? "";
+      if (name) normalized[name] = value;
+    }
+    return normalized;
+  }
+  return rawEventData;
+}
+
+function buildGraph(events: any[]): { nodes: ProcNode[]; links: ProcLink[]; stats: GraphStats } {
   const nodeMap = new Map<string, ProcNode>();
   const links: ProcLink[] = [];
   const degree = new Map<string, number>();
+  const hostSet = new Set<string>();
+  let process4688 = 0;
+  let sysmonProcessCreate = 0;
+  let withParentField = 0;
 
   for (const ev of events) {
-    const ed =
-      ev.event_data_json?.Event?.EventData || ev.event_data_json?.EventData || {};
+    const ed = normalizeEventData(
+      ev.event_data_json?.Event?.EventData || ev.event_data_json?.EventData || {}
+    );
+    const channel = String(ev.channel || "").toLowerCase();
+    const source = String(ev.source || "").toLowerCase();
+    if (ev.event_id === 4688 && channel === "security") process4688 += 1;
+    if (ev.event_id === 1 && (channel.includes("sysmon") || source.includes("sysmon"))) {
+      sysmonProcessCreate += 1;
+    }
+
     const guid = ed.ProcessGuid || ed.ProcessGUID;
     const parentGuid = ed.ParentProcessGuid || ed.ParentProcessGUID;
     const pidRaw = firstPid(ed, [
@@ -108,6 +143,7 @@ function buildGraph(events: any[]): { nodes: ProcNode[]; links: ProcLink[] } {
     const ppid = ppidRaw;
     const nodeId = (guid as string | undefined) || String(pid);
     const parentId = (parentGuid as string | undefined) || (ppid !== undefined ? String(ppid) : undefined);
+    if (ev.computer) hostSet.add(String(ev.computer));
 
     if (!nodeMap.has(nodeId)) {
       const suspicious =
@@ -133,6 +169,7 @@ function buildGraph(events: any[]): { nodes: ProcNode[]; links: ProcLink[] } {
       links.push({ source: parentId, target: nodeId });
       degree.set(nodeId, (degree.get(nodeId) || 0) + 1);
       degree.set(parentId, (degree.get(parentId) || 0) + 1);
+      withParentField += 1;
     }
   }
 
@@ -159,14 +196,24 @@ function buildGraph(events: any[]): { nodes: ProcNode[]; links: ProcLink[] } {
   // Keep only nodes that have at least one edge (or are suspicious)
   const filteredNodes = Array.from(nodeMap.values()).filter((n) => {
     const deg = degree.get(n.id) || 0;
-    return deg > 0 || n.suspicious;
+    return deg > 0 || n.suspicious || !!n.cmd;
   });
   const filteredIds = new Set(filteredNodes.map((n) => n.id));
   const filteredLinks = links.filter(
     (l) => filteredIds.has(String(l.source)) && filteredIds.has(String(l.target))
   );
 
-  return { nodes: filteredNodes, links: filteredLinks };
+  return {
+    nodes: filteredNodes,
+    links: filteredLinks,
+    stats: {
+      totalEvents: events.length,
+      process4688,
+      sysmonProcessCreate,
+      withParentField,
+      uniqueHosts: hostSet.size
+    }
+  };
 }
 
 export default function ProcessTree({ events }: { events: any[] }) {
@@ -174,7 +221,7 @@ export default function ProcessTree({ events }: { events: any[] }) {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<ProcNode | null>(null);
 
-  const { nodes, links } = useMemo(() => buildGraph(events), [events]);
+  const { nodes, links, stats } = useMemo(() => buildGraph(events), [events]);
   const hasGraph = nodes.length > 0;
 
   const filtered = useMemo(() => {
@@ -192,6 +239,14 @@ export default function ProcessTree({ events }: { events: any[] }) {
     );
     return nodes.filter((n) => keep.has(n.id));
   }, [nodes, search]);
+  const filteredIds = useMemo(() => new Set(filtered.map((n) => n.id)), [filtered]);
+  const visibleLinks = useMemo(
+    () =>
+      links.filter(
+        (l) => filteredIds.has(String(l.source)) && filteredIds.has(String(l.target))
+      ),
+    [links, filteredIds]
+  );
 
   useEffect(() => {
     if (!svgRef.current || filtered.length === 0) return;
@@ -205,7 +260,7 @@ export default function ProcessTree({ events }: { events: any[] }) {
       .forceSimulation(filtered as any)
       .force(
         "link",
-        d3.forceLink(links as any).id((d: any) => d.id).distance(80)
+        d3.forceLink(visibleLinks as any).id((d: any) => d.id).distance(80)
       )
       .force("charge", d3.forceManyBody().strength(-180))
       .force("center", d3.forceCenter(width / 2, height / 2))
@@ -218,7 +273,7 @@ export default function ProcessTree({ events }: { events: any[] }) {
       .attr("stroke", "#334155")
       .attr("stroke-width", 1)
       .selectAll("line")
-      .data(links)
+      .data(visibleLinks)
       .enter()
       .append("line");
 
@@ -292,7 +347,7 @@ export default function ProcessTree({ events }: { events: any[] }) {
     return () => {
       simulation.stop();
     };
-  }, [filtered, links]);
+  }, [filtered, visibleLinks]);
 
   return (
     <div className="space-y-3">
@@ -304,8 +359,15 @@ export default function ProcessTree({ events }: { events: any[] }) {
           className="input flex-1"
         />
         <div className="text-xs text-muted">
-          Nodes: {filtered.length} | Edges: {links.length}
+          Nodes: {filtered.length} | Edges: {visibleLinks.length}
         </div>
+      </div>
+      <div className="text-xs text-muted grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div>Total events: {stats.totalEvents}</div>
+        <div>Security 4688: {stats.process4688}</div>
+        <div>Sysmon EID 1: {stats.sysmonProcessCreate}</div>
+        <div>With parent fields: {stats.withParentField}</div>
+        <div>Hosts: {stats.uniqueHosts}</div>
       </div>
       {hasGraph ? (
         <svg
@@ -313,7 +375,13 @@ export default function ProcessTree({ events }: { events: any[] }) {
           className="w-full h-[640px] bg-slate-900/70 rounded-lg border border-slate-800/60"
         />
       ) : (
-        <div className="text-muted text-sm">No process relationships to show.</div>
+        <div className="text-muted text-sm space-y-1">
+          <div>No process relationships to show from current dataset.</div>
+          <div>
+            Process Tree needs Security `4688` or Sysmon Process Create (`EventID=1`) logs
+            that include parent-child fields.
+          </div>
+        </div>
       )}
       <Drawer open={!!selected} onClose={() => setSelected(null)}>
         {selected && (

@@ -22,7 +22,7 @@ export default function ProcessesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Process Tree</h1>
         <div className="text-muted text-sm">
-          Based on recent process creation events (4688)
+          Built from Security 4688 and Sysmon Process Create events
         </div>
       </div>
       {isLoading && <div className="text-slate-400">Loading…</div>}
@@ -32,8 +32,12 @@ export default function ProcessesPage() {
         </div>
       )}
       {events.length === 0 && !isLoading && (
-        <div className="text-muted text-sm">
-          No process creation events found. Try ingesting Security/Sysmon logs or increase limit.
+        <div className="text-muted text-sm space-y-1">
+          <div>No process-creation data found for graph building.</div>
+          <div>
+            Ingest `Security.evtx` with Process Creation auditing (4688) or
+            `Microsoft-Windows-Sysmon/Operational.evtx` logs.
+          </div>
         </div>
       )}
       {events.length > 0 && <ProcessTree events={events} />}

@@ -801,16 +801,17 @@
   object_dn_regex: "(?i)(OU=Domain Controllers|CN=Admins|CN=Schema|CN=Policies)"
 
 - id: token-impersonation-seimpersonate
-  name: Token Impersonation via SeImpersonatePrivilege
+  name: Rare Token Privileges Assigned at Logon
   description: >
-    Assignment of SeImpersonatePrivilege or SeAssignPrimaryTokenPrivilege.
-    Often seen in token impersonation chains used by privilege-escalation tools
-    such as PrintSpoofer, Juicy Potato, and RoguePotato.
+    Assignment of rare token-manipulation privileges at logon, such as
+    SeAssignPrimaryTokenPrivilege, SeTcbPrivilege, or SeCreateTokenPrivilege.
+    SeImpersonatePrivilege was intentionally excluded here because it is common
+    in legitimate administrative logons and caused overlap with the generic 4672 rule.
   severity: high
   mitre: ["T1134.001 - Token Impersonation/Theft"]
   event_id: [4672]
   channel: ["Security"]
-  privilege_list_regex: "(?i)(SeImpersonatePrivilege|SeAssignPrimaryTokenPrivilege|SeTcbPrivilege|SeCreateTokenPrivilege)"
+  privilege_list_regex: "(?i)(SeAssignPrimaryTokenPrivilege|SeTcbPrivilege|SeCreateTokenPrivilege)"
   exclude_user:
     - "NT AUTHORITY\\SYSTEM"
     - "SYSTEM"
