@@ -57,10 +57,6 @@ export default function Sidebar() {
           );
         })}
       </nav>
-
-      <div className="rounded-xl border border-slate-800/70 bg-slate-900/45 px-3 py-2 text-[11px] text-muted">
-        Tip: `g` then press page shortcuts (1..9) for quick navigation.
-      </div>
     </aside>
   );
 }
