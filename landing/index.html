@@ -190,7 +190,6 @@
       animation: fadeUp .55s ease forwards;
       transition: transform .25s ease, border-color .25s ease;
       cursor: pointer;
-      text-decoration: none;
     }
 
     .card::before {
@@ -204,7 +203,7 @@
 
     .card-blue::before { background: radial-gradient(ellipse at 0% 0%, rgba(14,165,233,.12) 0%, transparent 65%); }
     .card-orange::before { background: radial-gradient(ellipse at 0% 0%, rgba(249,115,22,.1) 0%, transparent 65%); }
-
+    a.card, a.card:hover { text-decoration: none; color: inherit; }
     .card:hover { transform: translateY(-4px); }
     .card-blue:hover  { border-color: rgba(14,165,233,.4); }
     .card-orange:hover { border-color: rgba(249,115,22,.35); }
@@ -314,14 +313,13 @@
       font-weight: 700;
       font-size: 14px;
       letter-spacing: .03em;
-      text-decoration: none;
       transition: filter .2s ease, box-shadow .2s ease, gap .2s ease;
       color: #f0f9ff;
       border: none;
       cursor: pointer;
+      align-self: flex-start;
     }
-    .cta:hover { filter: brightness(1.12); gap: 16px; }
-
+    .card:hover .cta { filter: brightness(1.12); gap: 16px; }
     .cta-blue {
       background: linear-gradient(130deg, #0369a1, #0ea5e9);
       box-shadow: 0 4px 24px rgba(14,165,233,.25);
@@ -335,7 +333,7 @@
     .cta-orange:hover { box-shadow: 0 8px 36px rgba(249,115,22,.38); }
 
     .arrow { font-size: 16px; transition: transform .2s ease; }
-    .cta:hover .arrow { transform: translateX(4px); }
+    .card:hover .cta .arrow { transform: translateX(4px); }
 
     /* ─── FOOTER ──────────────────────────────────────────── */
     .footer {
@@ -389,10 +387,6 @@
       return window.location.protocol + "//" + window.location.hostname + ":" + port;
     }
 
-    function goToPort(port) {
-      window.location.href = appUrl(port);
-    }
-
     document.addEventListener("DOMContentLoaded", function () {
       var landingCode = document.getElementById("landingAddress");
       if (landingCode) {
@@ -433,7 +427,7 @@
     <section class="cards">
 
       <!-- Log Parser -->
-      <div class="card card-blue" onclick="goToPort(8800)">
+      <a class="card card-blue" data-app-port="8800" href="#">
         <div class="card-top">
           <span class="tag tag-blue">Text Log Workflow</span>
           <span class="port">:8800</span>
@@ -446,14 +440,14 @@
           <div class="feat"><span>CSV Export</span></div>
           <div class="feat"><span>Pattern Matching</span></div>
         </div>
-        <a class="cta cta-blue" data-app-port="8800" href="#">
+        <div class="cta cta-blue">
           Open Log Parser
           <span class="arrow">→</span>
-        </a>
-      </div>
+        </div>
+      </a>
 
       <!-- Event Log Parser -->
-      <div class="card card-orange" onclick="goToPort(3000)">
+      <a class="card card-orange" data-app-port="3000" href="#">
         <div class="card-top">
           <span class="tag tag-orange">Windows Event Workflow</span>
           <span class="port">:3000</span>
@@ -466,11 +460,11 @@
           <div class="feat"><span>Timeline Pivots</span></div>
           <div class="feat"><span>Incident Reports</span></div>
         </div>
-        <a class="cta cta-orange" data-app-port="3000" href="#">
+        <div class="cta cta-orange">
           Open Event Parser
           <span class="arrow">→</span>
-        </a>
-      </div>
+        </div>
+      </a>
 
     </section>
 

@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EVENT_DIR="${ROOT_DIR}/apps/EventLogParser"
 LOG_DIR="${ROOT_DIR}/apps/Log_parser"
-LANDING_UI_DIR="${ROOT_DIR}/landing-ui"
+LANDING_DIR="${ROOT_DIR}/landing"
 
 require_command() {
   local cmd="$1"
@@ -36,7 +36,7 @@ LANDING_LOG="${LANDING_LOG:-${ROOT_DIR}/logs/landing.log}"
 
 export EVTX_DB_PATH="${EVTX_DB_PATH:-events.db}"
 export RUST_LOG="${RUST_LOG:-info}"
-export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-}"
+export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-http://localhost:8080}"
 export BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0:8800}"
 STARTUP_TIMEOUT_SECS="${STARTUP_TIMEOUT_SECS:-600}"
 AUTO_KILL_PORTS="${AUTO_KILL_PORTS:-0}"
@@ -152,22 +152,6 @@ prepare_event_frontend() {
   fi
 }
 
-prepare_landing_frontend() {
-  if [[ ! -d "${LANDING_UI_DIR}" ]]; then
-    echo "[warn] Modern landing UI not found at ${LANDING_UI_DIR}, using legacy."
-    return
-  fi
-  if [[ ! -d "${LANDING_UI_DIR}/node_modules" ]]; then
-    echo "[prep] Installing modern landing UI dependencies (npm install)..."
-    ( cd "${LANDING_UI_DIR}" && npm install )
-  fi
-  echo "[prep] Building modern landing UI..."
-  (
-    cd "${LANDING_UI_DIR}"
-    npm run build
-  )
-}
-
 cleanup() {
   if [[ "${CLEANED_UP}" == "1" ]]; then
     return
@@ -207,16 +191,7 @@ ensure_port_available 8080 "Event API"
 ensure_port_available 8800 "Log Parser API"
 ensure_port_available 8899 "Landing Page"
 
-prepare_landing_frontend
 prepare_event_frontend
-
-if [[ -d "${LANDING_UI_DIR}/dist" ]]; then
-  LANDING_SERVE_DIR="${LANDING_UI_DIR}/dist"
-  echo "[info] Serving modern landing page from ${LANDING_SERVE_DIR}"
-else
-  LANDING_SERVE_DIR="${ROOT_DIR}/landing"
-  echo "[info] Serving legacy landing page from ${LANDING_SERVE_DIR}"
-fi
 
 start_process \
   "EventLogParser Backend (8080)" \
@@ -226,7 +201,7 @@ EVENT_BACK_PID="${STARTED_PID}"
 
 start_process \
   "EventLogParser Frontend (3000)" \
-  "cd '${EVENT_DIR}/web' && exec npm run dev -- --hostname 0.0.0.0 --port 3000" \
+  "cd '${EVENT_DIR}/web' && exec npm run dev -- --port 3000" \
   "${EVENT_FRONT_LOG}"
 EVENT_FRONT_PID="${STARTED_PID}"
 
@@ -237,9 +212,9 @@ start_process \
 LOG_PARSER_PID="${STARTED_PID}"
 
 if command -v python3 >/dev/null 2>&1; then
-  LANDING_CMD="cd '${LANDING_SERVE_DIR}' && exec python3 -m http.server 8899"
+  LANDING_CMD="cd '${LANDING_DIR}' && exec python3 -m http.server 8899"
 elif command -v python >/dev/null 2>&1; then
-  LANDING_CMD="cd '${LANDING_SERVE_DIR}' && exec python -m http.server 8899"
+  LANDING_CMD="cd '${LANDING_DIR}' && exec python -m http.server 8899"
 else
   echo "Error: python/python3 not found for landing page server." >&2
   exit 1

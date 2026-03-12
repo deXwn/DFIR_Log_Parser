@@ -7,11 +7,15 @@
     <!-- Bootstrap Grid (grid only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=8" />
+    <link rel="stylesheet" href="style.css?v=9" />
     <script>
       function toolkitUrl() {
         return window.location.protocol + "//" + window.location.hostname + ":8899/";
       }
+      document.addEventListener('DOMContentLoaded', function() {
+        const backLink = document.getElementById('backToToolkit');
+        if (backLink) backLink.href = toolkitUrl();
+      });
     </script>
   </head>
   <body>
@@ -19,7 +23,7 @@
       <div class="topbar">
         <h1>DFIR Log Search</h1>
         <div class="topbar-links">
-          <a class="btn secondary" href="#" onclick="window.location.href=toolkitUrl(); return false;">Back to Toolkit</a>
+          <a id="backToToolkit" class="btn secondary" href="#">Back to Toolkit</a>
           <a class="btn secondary" href="/detection">Detection</a>
           <div class="pill">Rust-powered log analysis</div>
         </div>
@@ -69,98 +73,111 @@
               </div>
               <p>Define the dataset, tune match logic, and narrow the result set before exporting.</p>
             </div>
-            <div class="row">
-              <div class="col-12">
-                <label>
-                  Root path
-                  <input type="text" id="rootPath" placeholder="/path/to/logs" autocomplete="off" required />
-                </label>
+            <fieldset class="form-fieldset">
+              <legend>Search Scope & Keywords</legend>
+              <div class="row">
+                <div class="col-12">
+                  <label>
+                    Root path
+                    <input type="text" id="rootPath" placeholder="/path/to/logs" autocomplete="off" required />
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    Keywords (comma separated)
+                    <input type="text" id="keywords" placeholder="error, failed, denied" />
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    Exclude keywords (comma separated)
+                    <input type="text" id="noneKeywords" placeholder="debug, info" />
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    Match mode
+                    <select id="matchMode">
+                      <option value="any">Any (OR)</option>
+                      <option value="all">All (AND)</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label class="checkbox-label" style="padding-top: 24px;">
+                    <input type="checkbox" id="caseSensitive" />
+                    <span>Case sensitive</span>
+                  </label>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label>
-                  Keywords (comma separated)
-                  <input type="text" id="keywords" placeholder="error, failed, denied" />
-                </label>
+            </fieldset>
+            <fieldset class="form-fieldset">
+              <legend>Filters & Sorting</legend>
+              <div class="row">
+                <div class="col-md-6">
+                  <label>
+                    HTTP status code
+                    <select id="statusCode">
+                      <option value="">Any</option>
+                      <option value="200">200</option>
+                      <option value="301">301</option>
+                      <option value="302">302</option>
+                      <option value="404">404</option>
+                      <option value="500">500</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    IP scope
+                    <select id="ipScope">
+                      <option value="">Any</option>
+                      <option value="private">Private only</option>
+                      <option value="public">Public only</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    Min bytes_received
+                    <input type="number" id="minBytesReceived" min="0" step="1" placeholder="e.g. 10000" />
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label>
+                    Sort by
+                    <select id="sortMode">
+                      <option value="file_position">File &amp; line (default)</option>
+                      <option value="bytes_received_desc">bytes_received ↓ (high to low)</option>
+                      <option value="bytes_received_asc">bytes_received ↑ (low to high)</option>
+                    </select>
+                  </label>
+                </div>
               </div>
-              <div class="col-md-6">
-                <label>
-                  Exclude keywords (comma separated)
-                  <input type="text" id="noneKeywords" placeholder="debug, info" />
-                </label>
+            </fieldset>
+            <fieldset class="form-fieldset">
+              <legend>Output & Paging</legend>
+              <div class="row">
+                <div class="col-md-6">
+                  <label>
+                    Page size
+                    <select id="pageSize">
+                      <option value="50">50</option>
+                      <option value="100" selected>100</option>
+                      <option value="200">200</option>
+                      <option value="500">500</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label class="checkbox-label" style="padding-top: 24px;">
+                    <input type="checkbox" id="exportCsv" />
+                    <span>Export all to CSV</span>
+                  </label>
+                </div>
               </div>
-              <div class="col-md-3 col-6">
-                <label>
-                  Match mode
-                  <select id="matchMode">
-                    <option value="any">Any (OR)</option>
-                    <option value="all">All (AND)</option>
-                  </select>
-                </label>
-              </div>
-              <div class="col-md-3 col-6">
-                <label>
-                  Page size
-                  <select id="pageSize">
-                    <option value="50">50</option>
-                    <option value="100" selected>100</option>
-                    <option value="200">200</option>
-                    <option value="500">500</option>
-                  </select>
-                </label>
-              </div>
-              <div class="col-md-3 col-6">
-                <label>
-                  HTTP status code
-                  <select id="statusCode">
-                    <option value="">Any</option>
-                    <option value="200">200</option>
-                    <option value="301">301</option>
-                    <option value="302">302</option>
-                    <option value="404">404</option>
-                    <option value="500">500</option>
-                  </select>
-                </label>
-              </div>
-              <div class="col-md-3 col-6">
-                <label>
-                  IP scope
-                  <select id="ipScope">
-                    <option value="">Any</option>
-                    <option value="private">Private only</option>
-                    <option value="public">Public only</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-            <div class="row row-separated">
-              <div class="col-md-6">
-                <label>
-                  Min bytes_received
-                  <input type="number" id="minBytesReceived" min="0" step="1" placeholder="e.g. 10000" />
-                </label>
-              </div>
-              <div class="col-md-6">
-                <label>
-                  Sort by
-                  <select id="sortMode">
-                    <option value="file_position">File &amp; line (default)</option>
-                    <option value="bytes_received_desc">bytes_received ↓ (high to low)</option>
-                    <option value="bytes_received_asc">bytes_received ↑ (low to high)</option>
-                  </select>
-                </label>
-              </div>
-            </div>
+            </fieldset>
             <div class="controls">
-              <div class="switches">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="caseSensitive" />
-                  <span>Case sensitive</span>
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="exportCsv" />
-                  <span>Export all to CSV</span>
-                </label>
-              </div>
               <div class="action-buttons">
                 <button type="submit" id="searchButton">Search</button>
                 <button type="button" id="ipSummaryButton" class="secondary">IP summary</button>

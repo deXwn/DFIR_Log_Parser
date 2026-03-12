@@ -5,6 +5,8 @@ Unified local workspace for two DFIR tools:
 1. `Event Log Parser` (EVTX-focused)
 2. `Log Parser` (plain-text log analytics)
 
+<img src="docs/images/image.png" />
+
 Both tools are started from one launcher and exposed through one landing page.
 
 ## Contents

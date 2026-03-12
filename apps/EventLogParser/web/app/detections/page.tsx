@@ -66,84 +66,109 @@ export default function DetectionsPage() {
         </button>
       </div>
       {error && <div className="text-danger text-sm">{error}</div>}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.88fr_1.12fr]">
-        <Card className="p-4 space-y-2">
-          <h2 className="text-sm uppercase tracking-[0.2em] text-muted">
-            Rules
-          </h2>
-          <div className="divide-y divide-black/40">
-            {data.map((d: any) => (
-              <div
-                key={d.rule.id}
-                className={`rounded-xl p-3 cursor-pointer hover:bg-black/20 ${
-                  selectedRule?.rule?.id === d.rule.id ? "bg-accent/15" : ""
-                }`}
-                onClick={() => setSelectedRule(d)}
-              >
-                <div className="flex justify-between gap-3 text-sm">
-                  <span className="font-semibold">{d.rule.name}</span>
-                  <span
-                    className={`badge ${
-                      d.rule.severity === "high"
-                        ? "badge-danger"
-                        : d.rule.severity === "medium"
-                        ? "badge-accent"
-                        : "badge-muted"
-                    }`}
-                  >
-                    {d.rule.severity || "info"}
-                  </span>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.88fr_1.12fr] xl:items-stretch">
+        <Card className="flex min-h-[620px] min-h-0 flex-col overflow-hidden p-4 xl:h-[74vh] xl:max-h-[920px] xl:min-h-0">
+          <div className="flex items-center justify-between gap-3 border-b border-black/40 pb-3">
+            <h2 className="text-sm uppercase tracking-[0.2em] text-muted">
+              Rules
+            </h2>
+            <span className="badge badge-muted">{data.length} loaded</span>
+          </div>
+          <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="space-y-2">
+              {data.map((d: any) => (
+                <div
+                  key={d.rule.id}
+                  className={`rounded-xl border border-black/30 p-3 cursor-pointer transition hover:bg-black/20 ${
+                    selectedRule?.rule?.id === d.rule.id ? "bg-accent/15 border-accent/25" : "bg-black/10"
+                  }`}
+                  onClick={() => setSelectedRule(d)}
+                >
+                  <div className="flex justify-between gap-3 text-sm">
+                    <span className="font-semibold">{d.rule.name}</span>
+                    <span
+                      className={`badge ${
+                        d.rule.severity === "high"
+                          ? "badge-danger"
+                          : d.rule.severity === "medium"
+                          ? "badge-accent"
+                          : "badge-muted"
+                      }`}
+                    >
+                      {d.rule.severity || "info"}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted">{d.rule.description || ""}</div>
+                  <div className="mt-2 text-xs text-orange-100/80">Hits: {d.hits}</div>
                 </div>
-                <div className="mt-2 text-xs text-muted">{d.rule.description || ""}</div>
-                <div className="mt-2 text-xs text-orange-100/80">Hits: {d.hits}</div>
-              </div>
-            ))}
+              ))}
+              {!loading && data.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-700/70 bg-black/10 px-4 py-8 text-center text-sm text-muted">
+                  No rules loaded yet. Run the current ruleset to populate this panel.
+                </div>
+              )}
+            </div>
           </div>
         </Card>
-        <Card className="p-4 space-y-2">
-          <h2 className="text-sm uppercase tracking-[0.2em] text-muted">
-            Matches
-          </h2>
-          {!selectedRule && <div className="text-muted text-sm">Select a rule</div>}
+        <Card className="flex min-h-[620px] min-h-0 flex-col overflow-hidden p-4 xl:h-[74vh] xl:max-h-[920px] xl:min-h-0">
+          <div className="flex items-center justify-between gap-3 border-b border-black/40 pb-3">
+            <h2 className="text-sm uppercase tracking-[0.2em] text-muted">
+              Matches
+            </h2>
+            {selectedRule ? (
+              <span className="badge badge-muted">
+                {selectedRule.events.length} events
+              </span>
+            ) : null}
+          </div>
+          {!selectedRule && (
+            <div className="mt-3 rounded-xl border border-dashed border-slate-700/70 bg-black/10 px-4 py-8 text-center text-sm text-muted">
+              Select a rule to review matching events.
+            </div>
+          )}
           {selectedRule && (
-            <div className="space-y-2 text-xs">
-              {selectedRule.events.map((ev: any) => (
-                <details
-                  key={ev.id}
-                  className="p-2 bg-panelAccent rounded border border-black/40"
-                >
-                  <summary className="cursor-pointer">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <span className="badge badge-accent">{ev.event_id}</span>
-                      <span className="text-muted">{ev.timestamp}</span>
+            <div className="mt-3 min-h-0 flex-1 overflow-y-auto pr-1">
+              <div className="space-y-2 text-xs">
+                {selectedRule.events.map((ev: any) => (
+                  <details
+                    key={ev.id}
+                    className="rounded border border-black/40 bg-panelAccent p-2"
+                  >
+                    <summary className="cursor-pointer">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <span className="badge badge-accent">{ev.event_id}</span>
+                        <span className="text-muted">{ev.timestamp}</span>
+                      </div>
+                      <div className="text-xs">
+                        User: {ev.user || "—"} | Host: {ev.computer} | Channel: {ev.channel} | Source:{" "}
+                        {ev.source || "—"}
+                      </div>
+                      <div className="text-xs text-muted">
+                        Keywords: {ev.keywords || "—"} | Path: {ev.ingest_path || "—"}
+                      </div>
+                    </summary>
+                    <div className="mt-2 space-y-1">
+                      <div className="text-xs uppercase tracking-[0.2em] text-muted">
+                        Event Data
+                      </div>
+                      <pre className="max-h-[300px] overflow-auto rounded border border-black/40 bg-slate-900/80 p-2 text-[11px]">
+                        {JSON.stringify(ev.event_data_json, null, 2)}
+                      </pre>
+                      <div className="text-xs uppercase tracking-[0.2em] text-muted">
+                        Raw XML
+                      </div>
+                      <pre className="max-h-[200px] overflow-auto rounded border border-black/40 bg-slate-900/80 p-2 text-[11px]">
+                        {ev.raw_xml}
+                      </pre>
                     </div>
-                    <div className="text-xs">
-                      User: {ev.user || "—"} | Host: {ev.computer} | Channel: {ev.channel} | Source:{" "}
-                      {ev.source || "—"}
-                    </div>
-                    <div className="text-xs text-muted">
-                      Keywords: {ev.keywords || "—"} | Path: {ev.ingest_path || "—"}
-                    </div>
-                  </summary>
-                  <div className="mt-2 space-y-1">
-                    <div className="text-xs uppercase tracking-[0.2em] text-muted">
-                      Event Data
-                    </div>
-                    <pre className="bg-slate-900/80 p-2 rounded border border-black/40 text-[11px] overflow-auto max-h-[300px]">
-                      {JSON.stringify(ev.event_data_json, null, 2)}
-                    </pre>
-                    <div className="text-xs uppercase tracking-[0.2em] text-muted">
-                      Raw XML
-                    </div>
-                    <pre className="bg-slate-900/80 p-2 rounded border border-black/40 text-[11px] overflow-auto max-h-[200px]">
-                      {ev.raw_xml}
-                    </pre>
+                  </details>
+                ))}
+                {selectedRule.events.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-slate-700/70 bg-black/10 px-4 py-8 text-center text-sm text-muted">
+                    No events matched.
                   </div>
-                </details>
-              ))}
-              {selectedRule.events.length === 0 && (
-                <div className="text-muted">No events matched.</div>
-              )}
+                )}
+              </div>
             </div>
           )}
         </Card>
