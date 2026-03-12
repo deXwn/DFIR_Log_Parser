@@ -104,9 +104,25 @@ export default function IngestPage() {
   };
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">EVTX Ingest</h1>
+    <section className="panel-stack">
+      <Card className="hero-panel">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Collection Intake</div>
+            <h1 className="page-title">Bulk EVTX Ingest and File Staging</h1>
+            <p className="page-subtitle">
+              Enumerate EVTX folders, select files by size, and push large Windows event
+              collections into the analyst workspace with controlled parser concurrency.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <div className="page-intro">
+        <div className="page-copy">
+          <h2 className="text-xl font-semibold text-white">Ingest Controls</h2>
+          <p className="status-text">List candidate files, choose the dataset, then run a staged ingest.</p>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => {

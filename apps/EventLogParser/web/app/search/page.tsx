@@ -23,73 +23,107 @@ export default function SearchPage() {
   );
 
   return (
-    <Card className="p-6 md:p-8 space-y-4">
-      <div className="space-y-2">
-        <div className="text-xs text-muted">
-          Use commas for multiple values in exclude: <span className="font-mono">a,b</span>
+    <section className="panel-stack">
+      <Card className="hero-panel">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Search Console</div>
+            <h1 className="page-title">Query Event Payloads at Speed</h1>
+            <p className="page-subtitle">
+              Run focused text searches across parsed event payloads, then constrain results by
+              logon type, IP context, and exclusion terms.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <input
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search events..."
-            className="input flex-1 min-w-[240px]"
-          />
-          <input
-            value={logonType}
-            onChange={(e) => setLogonType(e.target.value)}
-            placeholder="LogonType"
-            className="input w-32"
-          />
-          <input
-            value={ip}
-            onChange={(e) => setIp(e.target.value)}
-            placeholder="IP include"
-            className="input w-40"
-          />
-          <input
-            value={exclude}
-            onChange={(e) => setExclude(e.target.value)}
-            placeholder="Exclude (a,b)"
-            className="input w-44"
-          />
-          <button
-            onClick={() => refetch()}
-            className="rounded-lg border border-accent/35 bg-accent/20 px-4 py-2 text-sm font-semibold text-sky-100 transition hover:bg-accent/30"
-          >
-            Search
-          </button>
+        <div className="hero-grid">
+          <div className="metric-card">
+            <div className="metric-label">Mode</div>
+            <div className="metric-value">Full-text search</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-label">Refinement</div>
+            <div className="metric-value">Logon / IP filters</div>
+          </div>
+          <div className="metric-card">
+            <div className="metric-label">Operator Tip</div>
+            <div className="metric-value">Comma-separated excludes</div>
+          </div>
         </div>
-      </div>
-      {isFetching && <div className="text-slate-400 text-sm">Searching…</div>}
-      {error && (
-        <div className="text-danger text-sm">{(error as Error).message || "Search failed"}</div>
-      )}
-      <div className="space-y-3">
-        {(data as any)?.data?.map((ev: any) => (
-          <details
-            key={ev.id}
-            className="glass p-3 border border-slate-800/60 rounded-lg group"
-          >
-            <summary className="cursor-pointer space-y-1">
-              <div className="text-xs text-muted mb-1">{ev.timestamp}</div>
-              <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
-                <span className="badge badge-accent">{ev.event_id}</span>
-                <span className="badge badge-muted">{ev.channel}</span>
-                <span className="badge badge-muted">{ev.computer}</span>
+      </Card>
+
+      <Card className="p-6 md:p-8 space-y-5">
+        <div className="space-y-2">
+          <div className="text-xs text-muted">
+            Use commas for multiple values in exclude: <span className="font-mono">a,b</span>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="Search events..."
+              className="input flex-1 min-w-[240px]"
+            />
+            <input
+              value={logonType}
+              onChange={(e) => setLogonType(e.target.value)}
+              placeholder="LogonType"
+              className="input w-32"
+            />
+            <input
+              value={ip}
+              onChange={(e) => setIp(e.target.value)}
+              placeholder="IP include"
+              className="input w-40"
+            />
+            <input
+              value={exclude}
+              onChange={(e) => setExclude(e.target.value)}
+              placeholder="Exclude (a,b)"
+              className="input w-44"
+            />
+            <button
+              onClick={() => refetch()}
+              className="action-btn primary"
+            >
+              Search
+            </button>
+          </div>
+        </div>
+        {isFetching && <div className="text-slate-400 text-sm">Searching…</div>}
+        {error && (
+          <div className="text-danger text-sm">{(error as Error).message || "Search failed"}</div>
+        )}
+        <div className="space-y-3">
+          {(data as any)?.data?.map((ev: any) => (
+            <details
+              key={ev.id}
+              className="glass p-4 border border-slate-800/60 rounded-2xl group"
+            >
+              <summary className="cursor-pointer space-y-1">
+                <div className="text-xs text-muted mb-1">{ev.timestamp}</div>
+                <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
+                  <span className="badge badge-accent">{ev.event_id}</span>
+                  <span className="badge badge-muted">{ev.channel}</span>
+                  <span className="badge badge-muted">{ev.computer}</span>
+                </div>
+                <div className="text-sm text-slate-300 line-clamp-1 group-open:line-clamp-none transition-all">
+                  {JSON.stringify(ev.event_data_json)}
+                </div>
+              </summary>
+              <div className="mt-2 text-xs text-slate-200 overflow-auto max-h-[300px] bg-slate-900/70 p-2 rounded">
+                <pre className="whitespace-pre-wrap break-all">
+                  {JSON.stringify(ev.event_data_json, null, 2)}
+                </pre>
               </div>
-              <div className="text-sm text-slate-300 line-clamp-1 group-open:line-clamp-none transition-all">
-                {JSON.stringify(ev.event_data_json)}
-              </div>
-            </summary>
-            <div className="mt-2 text-xs text-slate-200 overflow-auto max-h-[300px] bg-slate-900/70 p-2 rounded">
-              <pre className="whitespace-pre-wrap break-all">
-                {JSON.stringify(ev.event_data_json, null, 2)}
-              </pre>
+            </details>
+          ))}
+          {(data as any)?.data?.length === 0 && !isFetching && (
+            <div className="empty-state">
+              No matching events yet. Run a query or widen the filters.
             </div>
-          </details>
-        ))}
-      </div>
-    </Card>
+          )}
+        </div>
+      </Card>
+    </section>
   );
 }

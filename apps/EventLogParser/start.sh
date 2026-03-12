@@ -10,7 +10,7 @@ FRONT_LOG="${FRONT_LOG:-/tmp/evtx-frontend.log}"
 
 export EVTX_DB_PATH="${EVTX_DB_PATH:-events.db}"
 export RUST_LOG="${RUST_LOG:-info}"
-export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-http://localhost:8080}"
+export NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE:-}"
 
 echo "Starting backend (cargo run --release) -> ${BACK_LOG}"
 (
@@ -22,7 +22,7 @@ BACK_PID=$!
 echo "Starting frontend (npm run dev) -> ${FRONT_LOG}"
 (
   cd "$ROOT_DIR/web"
-  npm run dev
+  npm run dev -- --hostname 0.0.0.0 --port 3000
 ) >"$FRONT_LOG" 2>&1 &
 FRONT_PID=$!
 

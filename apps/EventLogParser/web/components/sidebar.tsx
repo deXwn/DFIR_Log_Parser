@@ -19,44 +19,50 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-slate-800/70 bg-panel/90 p-4 backdrop-blur md:flex">
-      <div className="rounded-2xl border border-slate-700/60 bg-panelAccent/70 px-4 py-4 shadow-xl shadow-slate-950/40">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted">
-          EVTX Forensics
-        </div>
-        <div className="mt-1 text-lg font-bold text-white">Analyst Console</div>
-        <div className="mt-2 text-xs text-muted">
-          Windows event triage, timeline, and threat detection workspace.
+    <aside className="sticky top-0 hidden h-screen w-80 flex-col border-r border-slate-800/70 bg-[rgba(5,10,18,0.82)] p-4 backdrop-blur-xl md:flex">
+      <div className="glass px-5 py-5 shadow-xl shadow-slate-950/40">
+        <div className="eyebrow">EVTX Workspace</div>
+        <div className="mt-4 text-xl font-extrabold text-white">Case Review</div>
+        <div className="mt-2 text-sm leading-6 text-slate-300">
+          Bulk ingest, event review, detections, timeline pivots, and reporting in a
+          single investigation surface.
         </div>
       </div>
 
-      <nav className="mt-4 flex-1 space-y-1">
+      <nav className="mt-5 flex-1 space-y-2">
         {links.map((link, idx) => {
           const active = pathname === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`group flex items-center gap-3 rounded-xl border px-3 py-2 text-sm font-medium transition ${
+              className={`group flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
                 active
-                  ? "border-accent/35 bg-accent/18 text-sky-200"
-                  : "border-transparent text-slate-200 hover:border-slate-700/70 hover:bg-panelAccent/55"
+                  ? "border-accent/35 bg-accent/12 text-orange-100 shadow-[0_0_0_1px_rgba(251,146,60,0.15)]"
+                  : "border-transparent bg-[rgba(8,14,24,0.32)] text-slate-200 hover:border-slate-700/70 hover:bg-panelAccent/55"
               }`}
             >
               <span
-                className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-semibold ${
+                className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-[11px] font-semibold ${
                   active
-                    ? "bg-accent/30 text-sky-100"
-                    : "bg-slate-900/70 text-muted group-hover:text-slate-200"
+                    ? "bg-accent/22 text-orange-100"
+                    : "bg-slate-950/70 text-muted group-hover:text-slate-200"
                 }`}
               >
                 {idx + 1}
               </span>
-              <span>{link.label}</span>
+              <span className="min-w-0 flex-1 truncate">{link.label}</span>
             </Link>
           );
         })}
       </nav>
+
+      <div className="glass px-4 py-4 text-xs text-slate-300">
+        <div className="metric-label">Workflow</div>
+        <div className="mt-2 font-semibold text-white">
+          Ingest {"->"} Explore {"->"} Detect {"->"} Report
+        </div>
+      </div>
     </aside>
   );
 }

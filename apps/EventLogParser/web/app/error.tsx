@@ -15,13 +15,28 @@ export default function GlobalError({
 
   return (
     <html>
-      <body className="bg-slate-950 text-slate-100 p-8">
-        <div className="max-w-xl mx-auto glass p-6 border border-slate-800/60">
-          <h1 className="text-lg font-semibold mb-2">Something went wrong</h1>
-          <div className="text-sm text-danger">{error.message}</div>
+      <body className="app-body p-6 md:p-10">
+        <div className="ambient-orbs" aria-hidden="true">
+          <div className="ambient-orb one" />
+          <div className="ambient-orb two" />
+          <div className="ambient-orb three" />
+        </div>
+        <div className="mx-auto max-w-3xl glass hero-panel">
+          <div className="eyebrow">System Fault</div>
+          <div className="page-copy">
+            <h1 className="page-title">The EVTX workspace hit an unrecoverable error</h1>
+            <p className="page-subtitle">
+              The UI is still responsive, but the current route could not complete. Review the
+              error below and retry the module.
+            </p>
+          </div>
+          <div className="empty-state">
+            <div className="metric-label">Error Message</div>
+            <div className="mt-3 text-sm text-danger">{error.message}</div>
+          </div>
           <button
             onClick={reset}
-            className="mt-4 px-4 py-2 rounded-lg bg-accent/80 text-slate-900 text-sm font-semibold hover:bg-accent transition"
+            className="action-btn primary w-fit"
           >
             Try again
           </button>

@@ -4,254 +4,488 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DFIR Toolkit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
-
     :root {
-      --bg-0: #05070d;
-      --bg-1: #0a101c;
-      --bg-2: #111a2b;
-      --text-strong: #ecf2ff;
-      --text-soft: #a9b5cd;
-      --line: #22304a;
-      --card: rgba(10, 18, 33, 0.82);
-      --cyan: #22d3ee;
-      --blue: #3b82f6;
-      --orange: #f97316;
-      --green: #14b8a6;
-      --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      --bg:       #020509;
+      --surface:  #060c14;
+      --panel:    #09131f;
+      --border:   #0f2035;
+      --glow-b:   #0ea5e9;
+      --glow-o:   #f97316;
+      --glow-g:   #10b981;
+      --text:     #cde4f7;
+      --muted:    #4a6780;
+      --mono:     'Share Tech Mono', monospace;
+      --sans:     'Exo 2', sans-serif;
     }
 
-    * { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      margin: 0;
       min-height: 100vh;
-      font-family: "Manrope", "Segoe UI", Tahoma, sans-serif;
-      color: var(--text-strong);
-      background:
-        radial-gradient(800px 500px at -15% -10%, #0b3a5e55 0%, transparent 50%),
-        radial-gradient(900px 600px at 120% -20%, #0d948844 0%, transparent 52%),
-        linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 42%, var(--bg-2) 100%);
-      padding: 26px 16px 34px;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
       overflow-x: hidden;
-    }
-
-    .shell {
-      width: min(1120px, 100%);
-      margin: 0 auto;
-      border: 1px solid #1a2741;
-      background: linear-gradient(145deg, #0a1426ee, #080f1eee);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
       position: relative;
-      isolation: isolate;
     }
 
-    .shell::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      background: linear-gradient(115deg, #164e63, #1e3a8a, #9a3412);
-      opacity: 0.25;
-      z-index: -1;
-      filter: blur(48px);
+    /* ─── GRID BACKGROUND ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(14,165,233,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14,165,233,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .top {
-      padding: clamp(26px, 5vw, 52px);
-      border-bottom: 1px solid var(--line);
+    /* ─── SCAN LINE ───────────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(14,165,233,.5), transparent);
+      animation: scan 6s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes scan {
+      0%   { top: -2px; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 1; }
+      100% { top: 100vh; opacity: 0; }
+    }
+
+    /* ─── AMBIENT BLOBS ───────────────────────────────────── */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .amb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .18; }
+    .amb-1 { width: 600px; height: 600px; top: -150px; left: -100px; background: #0369a1; }
+    .amb-2 { width: 500px; height: 500px; bottom: -80px; right: -80px; background: #7c2d12; }
+    .amb-3 { width: 350px; height: 350px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: #065f46; }
+
+    /* ─── WRAPPER ─────────────────────────────────────────── */
+    .wrap {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 48px;
+    }
+
+    /* ─── HEADER ──────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--glow-b);
+      letter-spacing: .2em;
+      border: 1px solid rgba(14,165,233,.3);
+      background: rgba(14,165,233,.06);
+      padding: 6px 14px;
+      border-radius: 4px;
+      animation: fadeUp .5s ease both;
+    }
+
+    .badge::before {
+      content: '';
+      display: block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--glow-b);
+      box-shadow: 0 0 8px var(--glow-b);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .3; }
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(34px, 6vw, 60px);
-      line-height: 0.97;
-      letter-spacing: -0.02em;
-      max-width: 13ch;
-      animation: reveal .55s ease forwards;
+      font-family: var(--sans);
+      font-size: clamp(52px, 10vw, 96px);
+      font-weight: 900;
+      letter-spacing: -.03em;
+      line-height: .92;
+      animation: fadeUp .6s .1s ease both;
     }
 
-    .lead {
-      margin: 16px 0 0;
-      color: var(--text-soft);
-      max-width: 70ch;
-      font-size: clamp(16px, 2.5vw, 20px);
-      animation: reveal .65s ease forwards;
+    h1 span {
+      display: block;
+      background: linear-gradient(110deg, #e2f3ff 0%, #7dd3fc 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .grid {
-      padding: clamp(18px, 4vw, 30px);
+    h1 .sub {
+      font-size: .38em;
+      font-weight: 300;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--muted), #6a8ca8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-family: var(--mono);
+      font-size: clamp(13px, 2vw, 15px);
+      color: var(--muted);
+      max-width: 56ch;
+      line-height: 1.8;
+      animation: fadeUp .6s .2s ease both;
+    }
+
+    /* ─── CARDS GRID ──────────────────────────────────────── */
+    .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      width: min(900px, 100%);
     }
 
     .card {
-      border: 1px solid #223252;
-      border-radius: 18px;
-      background: var(--card);
-      backdrop-filter: blur(8px);
-      padding: 18px;
-      display: grid;
-      gap: 12px;
+      position: relative;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
       opacity: 0;
-      transform: translateY(12px);
-      animation: reveal .45s ease forwards;
+      animation: fadeUp .55s ease forwards;
+      transition: transform .25s ease, border-color .25s ease;
+      cursor: pointer;
+      text-decoration: none;
     }
 
-    .card:nth-child(1) { animation-delay: .12s; }
-    .card:nth-child(2) { animation-delay: .22s; }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .3s ease;
+      pointer-events: none;
+    }
+
+    .card-blue::before { background: radial-gradient(ellipse at 0% 0%, rgba(14,165,233,.12) 0%, transparent 65%); }
+    .card-orange::before { background: radial-gradient(ellipse at 0% 0%, rgba(249,115,22,.1) 0%, transparent 65%); }
+
+    .card:hover { transform: translateY(-4px); }
+    .card-blue:hover  { border-color: rgba(14,165,233,.4); }
+    .card-orange:hover { border-color: rgba(249,115,22,.35); }
+    .card:hover::before { opacity: 1; }
+
+    .card:nth-child(1) { animation-delay: .3s; }
+    .card:nth-child(2) { animation-delay: .42s; }
+
+    /* corner accent */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px; height: 60px;
+      border-top: 2px solid;
+      border-right: 2px solid;
+      border-radius: 0 16px 0 0;
+      opacity: .35;
+    }
+    .card-blue::after   { border-color: var(--glow-b); }
+    .card-orange::after { border-color: var(--glow-o); }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
     .tag {
-      width: fit-content;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .15em;
       text-transform: uppercase;
-      border-radius: 999px;
-      padding: 6px 10px;
-      border: 1px solid transparent;
+      padding: 5px 10px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .tag-blue   { color: #7dd3fc; border-color: rgba(14,165,233,.4); background: rgba(14,165,233,.08); }
+    .tag-orange { color: #fdba74; border-color: rgba(249,115,22,.4); background: rgba(249,115,22,.08); }
+
+    .port {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .08em;
     }
 
-    .tag-log {
-      color: #93c5fd;
-      background: #172554;
-      border-color: #1d4ed8;
+    .card-icon {
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
     }
-
-    .tag-evtx {
-      color: #fdba74;
-      background: #431407;
-      border-color: #ea580c;
-    }
+    .icon-blue   { background: rgba(14,165,233,.12); border: 1px solid rgba(14,165,233,.2); }
+    .icon-orange { background: rgba(249,115,22,.1);  border: 1px solid rgba(249,115,22,.18); }
 
     .card h2 {
-      margin: 0;
-      font-size: 30px;
-      line-height: 1;
-      letter-spacing: -0.01em;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      line-height: 1.1;
     }
 
     .card p {
-      margin: 0;
-      color: var(--text-soft);
-      min-height: 58px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+      flex: 1;
     }
 
-    .chips {
+    /* feature list */
+    .features {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
     }
 
-    .chips span {
-      border: 1px solid #2c3d5f;
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 12px;
-      color: #d5def3;
-      background: #0b1427;
-    }
-
-    .btn {
-      margin-top: 2px;
-      display: inline-flex;
+    .feat {
+      display: flex;
       align-items: center;
-      justify-content: center;
-      width: fit-content;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #334d63;
+    }
+
+    .feat::before {
+      content: '';
+      display: block;
+      width: 16px; height: 1px;
+      flex-shrink: 0;
+    }
+    .card-blue .feat::before   { background: var(--glow-b); box-shadow: 0 0 6px var(--glow-b); }
+    .card-orange .feat::before { background: var(--glow-o); box-shadow: 0 0 6px var(--glow-o); }
+    .feat span { color: #8faec8; }
+
+    /* CTA button */
+    .cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 20px;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .03em;
       text-decoration: none;
-      color: #f8fbff;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      padding: 12px 16px;
-      border-radius: 12px;
-      transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+      transition: filter .2s ease, box-shadow .2s ease, gap .2s ease;
+      color: #f0f9ff;
+      border: none;
+      cursor: pointer;
     }
+    .cta:hover { filter: brightness(1.12); gap: 16px; }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.05);
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    .cta-blue {
+      background: linear-gradient(130deg, #0369a1, #0ea5e9);
+      box-shadow: 0 4px 24px rgba(14,165,233,.25);
     }
+    .cta-blue:hover { box-shadow: 0 8px 36px rgba(14,165,233,.4); }
 
-    .btn-log {
-      background: linear-gradient(130deg, #1d4ed8, #2563eb);
-    }
-
-    .btn-evtx {
+    .cta-orange {
       background: linear-gradient(130deg, #c2410c, #f97316);
+      box-shadow: 0 4px 24px rgba(249,115,22,.2);
     }
+    .cta-orange:hover { box-shadow: 0 8px 36px rgba(249,115,22,.38); }
 
-    .foot {
-      padding: 14px 24px 22px;
-      border-top: 1px solid var(--line);
-      color: var(--text-soft);
+    .arrow { font-size: 16px; transition: transform .2s ease; }
+    .cta:hover .arrow { transform: translateX(4px); }
+
+    /* ─── FOOTER ──────────────────────────────────────────── */
+    .footer {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      font-size: 14px;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      animation: fadeUp .6s .55s ease both;
     }
 
-    .foot code {
-      color: #e2e8f0;
-      background: #0f1b30;
-      border: 1px solid #273653;
-      border-radius: 8px;
+    .footer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--glow-g);
+      box-shadow: 0 0 8px var(--glow-g);
+    }
+
+    code {
+      color: var(--glow-g);
+      border: 1px solid rgba(16,185,129,.25);
+      background: rgba(16,185,129,.07);
       padding: 2px 8px;
-      font-family: ui-monospace, Menlo, Consolas, monospace;
+      border-radius: 4px;
+      font-family: var(--mono);
     }
 
-    @keyframes reveal {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* ─── ANIMATION ───────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── RESPONSIVE ──────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .cards { grid-template-columns: 1fr; }
+      .wrap  { padding: 32px 16px; gap: 36px; }
     }
   </style>
+  <script>
+    function appUrl(port) {
+      return window.location.protocol + "//" + window.location.hostname + ":" + port;
+    }
+
+    function goToPort(port) {
+      window.location.href = appUrl(port);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      var landingCode = document.getElementById("landingAddress");
+      if (landingCode) {
+        landingCode.textContent = window.location.hostname + ":8899";
+      }
+
+      var eventLinks = document.querySelectorAll("[data-app-port]");
+      eventLinks.forEach(function (el) {
+        var port = el.getAttribute("data-app-port");
+        if (!port) return;
+        if (el.tagName === "A") {
+          el.setAttribute("href", appUrl(port));
+        }
+      });
+    });
+  </script>
 </head>
 <body>
-  <main class="shell">
-    <section class="top">
-      <h1>DFIR Toolkit</h1>
-      <p class="lead">
-        Central launchpad for your forensic workflows. Choose a parser and continue in the same tab.
-      </p>
-    </section>
+  <div class="ambient">
+    <div class="amb amb-1"></div>
+    <div class="amb amb-2"></div>
+    <div class="amb amb-3"></div>
+  </div>
 
-    <section class="grid">
-      <article class="card">
-        <span class="tag tag-log">Text Log Workflow</span>
+  <div class="wrap">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="badge">SYSTEM ONLINE · DFIR OPERATIONS CENTER</div>
+      <h1>
+        <span>DFIR</span>
+        <span class="sub">Toolkit</span>
+      </h1>
+      <p class="tagline">// Central launchpad for forensic workflows.<br>Select a parser module to begin your investigation.</p>
+    </header>
+
+    <!-- CARDS -->
+    <section class="cards">
+
+      <!-- Log Parser -->
+      <div class="card card-blue" onclick="goToPort(8800)">
+        <div class="card-top">
+          <span class="tag tag-blue">Text Log Workflow</span>
+          <span class="port">:8800</span>
+        </div>
+        <div class="card-icon icon-blue">🔍</div>
         <h2>Log Parser</h2>
-        <p>
-          Run high-volume text-log searches, execute rule-based detections, and export investigation evidence.
-        </p>
-        <div class="chips">
-          <span>Port 8800</span>
-          <span>Rules + Thresholds</span>
-          <span>CSV Export</span>
+        <p>Run high-volume text-log searches, execute rule-based detections, and export investigation evidence at scale.</p>
+        <div class="features">
+          <div class="feat"><span>Rules + Thresholds</span></div>
+          <div class="feat"><span>CSV Export</span></div>
+          <div class="feat"><span>Pattern Matching</span></div>
         </div>
-        <a class="btn btn-log" href="http://localhost:8800">Open Log Parser</a>
-      </article>
+        <a class="cta cta-blue" data-app-port="8800" href="#">
+          Open Log Parser
+          <span class="arrow">→</span>
+        </a>
+      </div>
 
-      <article class="card">
-        <span class="tag tag-evtx">Windows Event Workflow</span>
-        <h2>Event Log Parser</h2>
-        <p>
-          Ingest EVTX collections, analyze timeline pivots, and build report-ready incident context.
-        </p>
-        <div class="chips">
-          <span>Port 3000</span>
-          <span>EVTX Ingest</span>
-          <span>Timeline + Reports</span>
+      <!-- Event Log Parser -->
+      <div class="card card-orange" onclick="goToPort(3000)">
+        <div class="card-top">
+          <span class="tag tag-orange">Windows Event Workflow</span>
+          <span class="port">:3000</span>
         </div>
-        <a class="btn btn-evtx" href="http://localhost:3000">Open Event Parser</a>
-      </article>
+        <div class="card-icon icon-orange">📋</div>
+        <h2>Event Log Parser</h2>
+        <p>Ingest EVTX collections, analyze timeline pivots, and build report-ready incident context with full Windows visibility.</p>
+        <div class="features">
+          <div class="feat"><span>EVTX Ingest</span></div>
+          <div class="feat"><span>Timeline Pivots</span></div>
+          <div class="feat"><span>Incident Reports</span></div>
+        </div>
+        <a class="cta cta-orange" data-app-port="3000" href="#">
+          Open Event Parser
+          <span class="arrow">→</span>
+        </a>
+      </div>
+
     </section>
 
-    <footer class="foot">
-      <span>Landing: <code>http://localhost:8899</code></span>
-      <span>APIs: <code>8080</code> and <code>8800</code></span>
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-item">
+        <div class="dot"></div>
+        Landing: <code id="landingAddress">127.0.0.1:8899</code>
+      </div>
+      <div class="footer-item">
+        <div class="dot"></div>
+        APIs: <code>:8080</code> <code>:8800</code>
+      </div>
     </footer>
-  </main>
+
+  </div>
 </body>
 </html>

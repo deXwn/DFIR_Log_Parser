@@ -19,6 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="app-body">
+        <div className="ambient-orbs" aria-hidden="true">
+          <div className="ambient-orb one" />
+          <div className="ambient-orb two" />
+          <div className="ambient-orb three" />
+        </div>
         <ReactQueryProvider>
           <div className="app-shell">
             <Sidebar />

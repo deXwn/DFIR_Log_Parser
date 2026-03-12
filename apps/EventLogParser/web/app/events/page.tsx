@@ -20,7 +20,19 @@ export default function EventsPage() {
   }, [search]);
 
   return (
-    <section className="space-y-3">
+    <section className="panel-stack">
+      <Card className="hero-panel">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Event Explorer</div>
+            <h1 className="page-title">Interactive EVTX Record Review</h1>
+            <p className="page-subtitle">
+              Filter by identity, channel, IP, keyword, and time to inspect high-volume event
+              collections without losing raw record fidelity.
+            </p>
+          </div>
+        </div>
+      </Card>
       <EventFilters value={filters} onChange={setFilters} />
       <EventTable filters={filters} />
     </section>

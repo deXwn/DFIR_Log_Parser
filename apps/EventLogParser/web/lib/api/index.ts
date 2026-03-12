@@ -1,5 +1,10 @@
+const envApiBase = process.env.NEXT_PUBLIC_API_BASE?.trim();
+
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8080";
+  envApiBase ||
+  (typeof window !== "undefined"
+    ? `${window.location.protocol}//${window.location.hostname}:8080`
+    : "http://127.0.0.1:8080");
 
 type Query = Record<string, string | number | boolean | undefined>;
 

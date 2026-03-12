@@ -55,9 +55,25 @@ export default function TimelinePage() {
   );
 
   return (
-    <Card className="p-6 md:p-8 space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-semibold">Timeline</h1>
+    <section className="panel-stack">
+      <Card className="hero-panel">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Temporal Analysis</div>
+            <h1 className="page-title">Timeline Reconstruction</h1>
+            <p className="page-subtitle">
+              Walk event density over time, isolate suspicious windows, and pivot straight into
+              the relevant records for sequence validation.
+            </p>
+          </div>
+        </div>
+      </Card>
+      <Card className="p-6 md:p-8 space-y-4">
+        <div className="page-intro">
+          <div className="page-copy">
+            <h2 className="text-xl font-semibold text-white">Timeline Controls</h2>
+            <p className="status-text">Set the time window, bucket size, and ingest source before plotting.</p>
+          </div>
         <div className="flex items-center gap-2 text-sm">
           <input
             type="datetime-local"
@@ -119,6 +135,7 @@ export default function TimelinePage() {
           <TimelineChart data={data as any} from={fromIso!} bucketSize={bucketSize} />
         </>
       )}
-    </Card>
+      </Card>
+    </section>
   );
 }

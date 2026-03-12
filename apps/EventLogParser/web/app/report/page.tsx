@@ -93,18 +93,28 @@ export default function ReportPage() {
 
   return (
     <section className="space-y-4 print:space-y-3 print-wrapper">
-      <div className="flex items-center justify-between print-avoid">
-        <h1 className="text-2xl font-semibold">Export Report</h1>
-        {report && (
-          <button
-            onClick={exportPdf}
-            className="px-3 py-2 rounded-lg bg-accent text-black font-semibold"
-          >
-            PDF
-          </button>
-        )}
-      </div>
+      <Card className="hero-panel print-avoid">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Reporting Suite</div>
+            <h1 className="page-title">Case Reporting and Evidence Assembly</h1>
+            <p className="page-subtitle">
+              Combine timeline context, IOC search results, selected events, and analyst notes into
+              a structured investigation output.
+            </p>
+          </div>
+          {report && (
+            <button onClick={exportPdf} className="action-btn primary">
+              PDF
+            </button>
+          )}
+        </div>
+      </Card>
       <Card className="p-4 space-y-3 print-card print-avoid">
+        <div className="page-copy">
+          <h2 className="text-xl font-semibold text-white">Report Parameters</h2>
+          <p className="status-text">Set metadata, search pivots, and time range before generating output.</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <input
             className="input"

@@ -7,18 +7,51 @@
     <!-- Bootstrap Grid (grid only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap-grid.min.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=8" />
+    <script>
+      function toolkitUrl() {
+        return window.location.protocol + "//" + window.location.hostname + ":8899/";
+      }
+    </script>
   </head>
   <body>
     <div class="app">
       <div class="topbar">
         <h1>DFIR Log Search</h1>
         <div class="topbar-links">
-          <a class="btn secondary" href="http://localhost:8899/">Back to Toolkit</a>
+          <a class="btn secondary" href="#" onclick="window.location.href=toolkitUrl(); return false;">Back to Toolkit</a>
           <a class="btn secondary" href="/detection">Detection</a>
           <div class="pill">Rust-powered log analysis</div>
         </div>
       </div>
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Text Log Workflow</div>
+          <h2>Search large log sets without losing context.</h2>
+          <p>
+            Point the parser at a root folder, run scoped keyword searches, pivot on IPs,
+            inspect surrounding lines, and export investigation output from the same workspace.
+          </p>
+          <div class="hero-actions">
+            <a class="btn" href="#search-form">Open Search Console</a>
+            <a class="btn secondary" href="/detection">Open Detection Runner</a>
+          </div>
+        </div>
+        <div class="hero-metrics">
+          <div class="hero-stat">
+            <span class="hero-stat-label">Engine</span>
+            <strong>High-speed Rust search</strong>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-label">Focus</span>
+            <strong>Contextual triage</strong>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-label">Output</span>
+            <strong>CSV export and IP pivots</strong>
+          </div>
+        </div>
+      </section>
       <div id="modal" class="modal hidden">
         <div class="modal-content">
           <button id="closeModal" class="close-btn">×</button>
@@ -26,141 +59,180 @@
         </div>
       </div>
 
-      <form id="search-form">
-        <div class="row">
-          <div class="col-12">
-            <label>
-              Root path
-              <input type="text" id="rootPath" placeholder="/path/to/logs" autocomplete="off" required />
-            </label>
+      <div class="workspace-grid">
+        <div class="workspace-main">
+          <form id="search-form">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Query Setup</div>
+                <h2>Search Controls</h2>
+              </div>
+              <p>Define the dataset, tune match logic, and narrow the result set before exporting.</p>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <label>
+                  Root path
+                  <input type="text" id="rootPath" placeholder="/path/to/logs" autocomplete="off" required />
+                </label>
+              </div>
+              <div class="col-md-6">
+                <label>
+                  Keywords (comma separated)
+                  <input type="text" id="keywords" placeholder="error, failed, denied" />
+                </label>
+              </div>
+              <div class="col-md-6">
+                <label>
+                  Exclude keywords (comma separated)
+                  <input type="text" id="noneKeywords" placeholder="debug, info" />
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label>
+                  Match mode
+                  <select id="matchMode">
+                    <option value="any">Any (OR)</option>
+                    <option value="all">All (AND)</option>
+                  </select>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label>
+                  Page size
+                  <select id="pageSize">
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                  </select>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label>
+                  HTTP status code
+                  <select id="statusCode">
+                    <option value="">Any</option>
+                    <option value="200">200</option>
+                    <option value="301">301</option>
+                    <option value="302">302</option>
+                    <option value="404">404</option>
+                    <option value="500">500</option>
+                  </select>
+                </label>
+              </div>
+              <div class="col-md-3 col-6">
+                <label>
+                  IP scope
+                  <select id="ipScope">
+                    <option value="">Any</option>
+                    <option value="private">Private only</option>
+                    <option value="public">Public only</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="row row-separated">
+              <div class="col-md-6">
+                <label>
+                  Min bytes_received
+                  <input type="number" id="minBytesReceived" min="0" step="1" placeholder="e.g. 10000" />
+                </label>
+              </div>
+              <div class="col-md-6">
+                <label>
+                  Sort by
+                  <select id="sortMode">
+                    <option value="file_position">File &amp; line (default)</option>
+                    <option value="bytes_received_desc">bytes_received ↓ (high to low)</option>
+                    <option value="bytes_received_asc">bytes_received ↑ (low to high)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="controls">
+              <div class="switches">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="caseSensitive" />
+                  <span>Case sensitive</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="exportCsv" />
+                  <span>Export all to CSV</span>
+                </label>
+              </div>
+              <div class="action-buttons">
+                <button type="submit" id="searchButton">Search</button>
+                <button type="button" id="ipSummaryButton" class="secondary">IP summary</button>
+              </div>
+              <span class="loading" id="loading" hidden>Searching…</span>
+            </div>
+            <div class="status" id="status"></div>
+          </form>
+
+          <div class="table-wrapper results-shell">
+            <div class="section-head compact">
+              <div>
+                <div class="eyebrow">Result Review</div>
+                <h2>Matched Lines</h2>
+              </div>
+              <p>Open context around a hit, review file position, and move through result pages quickly.</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 110px">Actions</th>
+                  <th style="width: 110px">Line</th>
+                  <th>Log line</th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr>
+                  <td colspan="3">No results yet.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div class="col-md-6">
-            <label>
-              Keywords (comma separated)
-              <input type="text" id="keywords" placeholder="error, failed, denied" />
-            </label>
-          </div>
-          <div class="col-md-6">
-            <label>
-              Exclude keywords (comma separated)
-              <input type="text" id="noneKeywords" placeholder="debug, info" />
-            </label>
-          </div>
-          <div class="col-md-3 col-6">
-            <label>
-              Match mode
-              <select id="matchMode">
-                <option value="any">Any (OR)</option>
-                <option value="all">All (AND)</option>
-              </select>
-            </label>
-          </div>
-          <div class="col-md-3 col-6">
-            <label>
-              Page size
-              <select id="pageSize">
-                <option value="50">50</option>
-                <option value="100" selected>100</option>
-                <option value="200">200</option>
-                <option value="500">500</option>
-              </select>
-            </label>
-          </div>
-          <div class="col-md-3 col-6">
-            <label>
-              HTTP status code
-              <select id="statusCode">
-                <option value="">Any</option>
-                <option value="200">200</option>
-                <option value="301">301</option>
-                <option value="302">302</option>
-                <option value="404">404</option>
-                <option value="500">500</option>
-              </select>
-            </label>
-          </div>
-          <div class="col-md-3 col-6">
-            <label>
-              IP scope
-              <select id="ipScope">
-                <option value="">Any</option>
-                <option value="private">Private only</option>
-                <option value="public">Public only</option>
-              </select>
-            </label>
+
+          <div class="pagination">
+            <button id="prevButton" disabled>Previous</button>
+            <span class="page-info" id="pageInfo">Page 1</span>
+            <button id="nextButton" disabled>Next</button>
           </div>
         </div>
-        <div class="row">
-          <div class="col-md-6">
-            <label>
-              Min bytes_received
-              <input type="number" id="minBytesReceived" min="0" step="1" placeholder="e.g. 10000" />
-            </label>
+
+        <aside class="workspace-side">
+          <div class="signal-frame">
+            <div class="panel-kicker">Session Summary</div>
+            <div class="summary" id="summary">
+              Enter a root path and keywords, then press Search.
+            </div>
           </div>
-          <div class="col-md-6">
-            <label>
-              Sort by
-              <select id="sortMode">
-                <option value="file_position">File & line (default)</option>
-                <option value="bytes_received_desc">bytes_received ↓ (high to low)</option>
-                <option value="bytes_received_asc">bytes_received ↑ (low to high)</option>
-              </select>
-            </label>
+
+          <div class="signal-frame">
+            <div class="panel-kicker">IP Pivot View</div>
+            <div class="ip-summary" id="ipSummaryBox">
+              No IP summary yet. Run a search, then click "IP summary".
+            </div>
           </div>
-        </div>
-        <div class="controls">
-          <div class="switches">
-            <label class="checkbox-label">
-              <input type="checkbox" id="caseSensitive" />
-              <span>Case sensitive</span>
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" id="exportCsv" />
-              <span>Export all to CSV</span>
-            </label>
+
+          <div class="signal-frame">
+            <div class="panel-kicker">Focused Inspection</div>
+            <div class="inspection" id="inspection">
+              No log line selected yet.
+            </div>
           </div>
-          <div class="action-buttons">
-            <button type="submit" id="searchButton">Search</button>
-            <button type="button" id="ipSummaryButton" class="secondary">IP summary</button>
+
+          <div class="support-note accent-note">
+            <div class="eyebrow">Operator Flow</div>
+            <h3>Recommended search path</h3>
+            <ul class="support-list">
+              <li>Start broad with high-signal keywords, then tighten filters instead of overfitting the first query.</li>
+              <li>Use IP summary as a pivot layer before drilling into surrounding context lines.</li>
+              <li>Export only after the result set is narrowed enough to preserve investigation value.</li>
+            </ul>
           </div>
-          <span class="loading" id="loading" hidden>Searching…</span>
-        </div>
-        <div class="status" id="status"></div>
-      </form>
-
-      <div class="summary" id="summary">
-        Enter a root path and keywords, then press Search.
-      </div>
-
-      <div class="ip-summary" id="ipSummaryBox">
-        No IP summary yet. Run a search, then click "IP summary".
-      </div>
-
-      <div class="inspection" id="inspection">
-        No log line selected yet.
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 110px">Actions</th>
-              <th style="width: 110px">Line</th>
-              <th>Log line</th>
-            </tr>
-          </thead>
-          <tbody id="resultsBody">
-            <tr>
-              <td colspan="3">No results yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination">
-        <button id="prevButton" disabled>Previous</button>
-        <span class="page-info" id="pageInfo">Page 1</span>
-        <button id="nextButton" disabled>Next</button>
+        </aside>
       </div>
     </div>
 

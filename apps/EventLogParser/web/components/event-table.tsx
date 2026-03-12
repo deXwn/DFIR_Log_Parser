@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { createPortal } from "react-dom";
@@ -128,7 +128,6 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [selected, setSelected] = useState<number>(-1);
   const [detail, setDetail] = useState<any | null>(null);
-  const detailRef = useRef<HTMLDivElement | null>(null);
   const [eventIdPopup, setEventIdPopup] = useState<{
     id: number;
     text: string;
@@ -152,6 +151,11 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
     () => eventsQuery.data?.pages.flatMap((p: any) => p.data) ?? [],
     [eventsQuery.data]
   );
+
+  const closeDetail = useCallback(() => {
+    setDetail(null);
+    setSelected(-1);
+  }, []);
 
   const eventBadgeClass = (eventId?: number) => {
     if (!eventId) return "badge badge-muted";
@@ -181,7 +185,7 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setDetail(null);
+        closeDetail();
         return;
       }
       if (!["ArrowDown", "ArrowUp", "Enter"].includes(e.key) || items.length === 0)
@@ -196,7 +200,7 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [items, selected]);
+  }, [closeDetail, items, selected]);
 
   const eventPopupPortal =
     eventIdPopup && typeof window !== "undefined"
@@ -226,53 +230,58 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
       : null;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="grid grid-cols-[180px,80px,160px,160px,140px,120px,120px] gap-2 px-3 py-2 text-xs uppercase tracking-[0.1em] text-muted border-b border-black/40 sticky top-0 z-10 bg-panel">
-        <span>Timestamp</span>
-        <span>Event ID</span>
-        <span>User</span>
-        <span>Computer</span>
-        <span>Channel</span>
-        <span>Opcode</span>
-        <span>Keywords</span>
-      </div>
-      <div
-        ref={containerRef}
-        className="h-[70vh] overflow-auto font-mono text-xs focus:outline-none relative"
-        tabIndex={0}
-      >
+    <Card
+      className={detail ? "overflow-hidden xl:grid xl:grid-cols-[minmax(0,1fr)_420px]" : "overflow-hidden"}
+    >
+      <div className="min-w-0">
+        <div className="sticky top-0 z-10 grid grid-cols-[180px,80px,160px,160px,140px,120px,120px] gap-2 border-b border-black/40 bg-panel px-3 py-2 text-xs uppercase tracking-[0.1em] text-muted">
+          <span>Timestamp</span>
+          <span>Event ID</span>
+          <span>User</span>
+          <span>Computer</span>
+          <span>Channel</span>
+          <span>Opcode</span>
+          <span>Keywords</span>
+        </div>
         <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative"
-          }}
+          ref={containerRef}
+          className="relative h-[70vh] overflow-auto font-mono text-xs focus:outline-none"
+          tabIndex={0}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const isLoaderRow = virtualRow.index > items.length - 1;
-            const event = items[virtualRow.index];
-            return (
-              <div
-                key={virtualRow.key}
-                onClick={() => {
-                  setSelected(virtualRow.index);
-                  setDetail(event);
-                }}
-                className={`absolute left-0 right-0 border-b border-black/30 px-3 py-2 cursor-pointer transition ${
-                  selected === virtualRow.index
-                    ? "bg-accent/15 shadow-inner"
-                    : "hover:bg-black/30"
-                }`}
-                style={{
-                  transform: `translateY(${virtualRow.start}px)`
-                }}
-              >
-                {isLoaderRow ? (
-                  eventsQuery.isFetchingNextPage ? (
-                    <div className="text-slate-400">Loading more…</div>
-                  ) : (
-                    <div className="text-slate-400">No more results</div>
-                  )
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative"
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const isLoaderRow = virtualRow.index > items.length - 1;
+              const event = items[virtualRow.index];
+              return (
+                <div
+                  key={virtualRow.key}
+                  onClick={() => {
+                    if (!event) return;
+                    const sameEvent = detail === event;
+                    setSelected(sameEvent ? -1 : virtualRow.index);
+                    setDetail(sameEvent ? null : event);
+                  }}
+                  className={`absolute left-0 right-0 cursor-pointer border-b border-black/30 px-3 py-2 transition ${
+                    selected === virtualRow.index
+                      ? "bg-accent/15 shadow-inner"
+                      : "hover:bg-black/30"
+                  }`}
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`
+                  }}
+                >
+                  {isLoaderRow ? (
+                    eventsQuery.isFetchingNextPage ? (
+                      <div className="text-slate-400">Loading more…</div>
+                    ) : (
+                      <div className="text-slate-400">No more results</div>
+                    )
                   ) : (
                     <div className="grid grid-cols-[180px,80px,160px,160px,140px,120px,120px] gap-2">
                       <span className="truncate">{event.timestamp}</span>
@@ -334,77 +343,115 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
                       <span className="truncate">{event.keywords ?? "—"}</span>
                     </div>
                   )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-      {detail && (
-        <div
-          ref={detailRef}
-          className="hidden xl:block absolute top-[64px] right-4 w-[420px] h-[82%] bg-panelAccent border border-black/50 rounded-lg shadow-2xl overflow-auto p-4"
-        >
-          <div className="flex items-start justify-between mb-2">
-            <div className="text-xs text-muted">{detail.timestamp}</div>
-            <button
-              onClick={() => setDetail(null)}
-              className="text-muted hover:text-accent transition text-sm"
-              aria-label="Close details"
-            >
-              ×
-            </button>
-          </div>
-          <div className="text-lg font-semibold">
-            {detail.event_id} • {detail.channel}
-          </div>
-          <div className="text-sm grid grid-cols-2 gap-2 my-2">
-            <div>User: {detail.user || "—"}</div>
-            <div>SID: {detail.sid || "—"}</div>
-            <div>Computer: {detail.computer}</div>
-            <div>Opcode: {detail.opcode ?? "—"}</div>
-            <div>Keywords: {detail.keywords ?? "—"}</div>
-          </div>
-          <div className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
-            Event Data
-          </div>
-          <pre className="bg-slate-900/80 p-3 rounded border border-slate-800 text-xs overflow-auto">
-            {JSON.stringify(detail.event_data_json, null, 2)}
-          </pre>
-        </div>
-      )}
-      <Drawer open={!!detail} onClose={() => setDetail(null)}>
-        {detail ? (
-          <div className="space-y-3 text-sm">
-            <div className="text-xs text-muted">{detail.timestamp}</div>
-            <div className="text-lg font-semibold">
-              {detail.event_id} • {detail.channel}
+
+      {detail ? (
+        <aside className="hidden h-[calc(70vh+41px)] flex-col border-l border-black/50 bg-panelAccent/90 xl:flex">
+          <div className="border-b border-black/40 px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-muted">
+                  Event Detail
+                </div>
+                <div className="mt-2 text-lg font-semibold text-white">
+                  {detail.event_id} • {detail.channel}
+                </div>
+                <div className="mt-1 text-xs text-muted">{detail.timestamp}</div>
+              </div>
+              <button
+                onClick={closeDetail}
+                className="rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-accent/35 hover:text-white"
+              >
+                Back to results
+              </button>
             </div>
+            <div className="mt-3 text-sm text-slate-300">{eventIdSummary(detail)}</div>
+          </div>
+
+          <div className="flex-1 space-y-4 overflow-y-auto p-4 text-sm">
             <div className="grid grid-cols-2 gap-2 text-slate-200">
               <div>User: {detail.user || "—"}</div>
               <div>SID: {detail.sid || "—"}</div>
-              <div>Computer: {detail.computer}</div>
-              <div>Opcode: {detail.opcode ?? "—"}</div>
+              <div>Computer: {detail.computer || "—"}</div>
+              <div>Opcode: {detail.opcode ?? detail.level ?? "—"}</div>
               <div>Keywords: {detail.keywords ?? "—"}</div>
+              <div>Source: {detail.source || "—"}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
+              <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted">
                 Event Data
               </div>
-              <pre className="bg-slate-900/80 p-3 rounded border border-slate-800 text-xs overflow-auto">
+              <pre className="overflow-auto rounded border border-slate-800 bg-slate-950/80 p-3 text-xs">
                 {JSON.stringify(detail.event_data_json, null, 2)}
               </pre>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-muted mb-1">
+              <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted">
                 Raw XML
               </div>
-              <pre className="bg-slate-900/80 p-3 rounded border border-slate-800 text-xs overflow-auto">
+              <pre className="overflow-auto rounded border border-slate-800 bg-slate-950/80 p-3 text-xs">
                 {detail.raw_xml}
               </pre>
             </div>
           </div>
-        ) : null}
-      </Drawer>
+        </aside>
+      ) : null}
+
+      <div className="xl:hidden">
+        <Drawer open={!!detail} onClose={closeDetail}>
+          {detail ? (
+            <div className="space-y-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-muted">
+                    Event Detail
+                  </div>
+                  <div className="mt-2 text-lg font-semibold text-white">
+                    {detail.event_id} • {detail.channel}
+                  </div>
+                  <div className="mt-1 text-xs text-muted">{detail.timestamp}</div>
+                </div>
+                <button
+                  onClick={closeDetail}
+                  className="rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-accent/35 hover:text-white"
+                >
+                  Back to results
+                </button>
+              </div>
+              <div className="text-sm text-slate-300">{eventIdSummary(detail)}</div>
+              <div className="grid grid-cols-2 gap-2 text-slate-200">
+                <div>User: {detail.user || "—"}</div>
+                <div>SID: {detail.sid || "—"}</div>
+                <div>Computer: {detail.computer || "—"}</div>
+                <div>Opcode: {detail.opcode ?? detail.level ?? "—"}</div>
+                <div>Keywords: {detail.keywords ?? "—"}</div>
+                <div>Source: {detail.source || "—"}</div>
+              </div>
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted">
+                  Event Data
+                </div>
+                <pre className="overflow-auto rounded border border-slate-800 bg-slate-950/80 p-3 text-xs">
+                  {JSON.stringify(detail.event_data_json, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <div className="mb-1 text-xs uppercase tracking-[0.2em] text-muted">
+                  Raw XML
+                </div>
+                <pre className="overflow-auto rounded border border-slate-800 bg-slate-950/80 p-3 text-xs">
+                  {detail.raw_xml}
+                </pre>
+              </div>
+            </div>
+          ) : null}
+        </Drawer>
+      </div>
       {eventPopupPortal}
     </Card>
   );

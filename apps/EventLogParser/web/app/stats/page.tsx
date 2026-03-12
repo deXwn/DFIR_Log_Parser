@@ -31,9 +31,25 @@ export default function StatsPage() {
   );
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Stats</h1>
+    <section className="panel-stack">
+      <Card className="hero-panel">
+        <div className="page-intro">
+          <div className="page-copy">
+            <div className="eyebrow">Data Distribution</div>
+            <h1 className="page-title">Statistical Overview of the Current Case</h1>
+            <p className="page-subtitle">
+              Review event density across IDs, channels, sources, users, and network fields to
+              understand dataset shape before deeper triage.
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <div className="page-intro gap-4">
+        <div className="page-copy">
+          <h2 className="text-xl font-semibold text-white">Distribution Panels</h2>
+          <p className="status-text">Filter by ingest path to isolate a specific collection source.</p>
+        </div>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-muted">Ingest Path:</span>
           <select
