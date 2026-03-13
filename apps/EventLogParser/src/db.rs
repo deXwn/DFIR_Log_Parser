@@ -2,8 +2,9 @@ use crate::error::AppError;
 use crate::models::{
     AggregatedLogon, CorrelatedLogon, CorrelationConfig, CorrelationStep, CorrelationTimeFilter,
     CountEntry, CustomReportHtmlResponse, CustomReportRequest, CustomReportResponse, DeleteRequest,
-    DetectionMatch, DetectionRule, Event, ReportFiltersOut, ReportMeta, ReportRequest,
-    ReportResponse, ReportSummary, StatsResponse, SuspiciousEvent, TimelineBucket,
+    DetectionCorrelationGroup, DetectionCorrelationGroupEvent, DetectionMatch, DetectionRule,
+    Event, ReportFiltersOut, ReportMeta, ReportRequest, ReportResponse, ReportSummary,
+    StatsResponse, SuspiciousEvent, TimelineBucket,
 };
 use chrono::{DateTime, Datelike, FixedOffset, NaiveDateTime, TimeZone, Timelike};
 use r2d2::Pool;
@@ -1394,6 +1395,29 @@ impl DetectionFilter {
 struct CorrEvent {
     event: Event,
     ts: i64,
+    source_rule_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+struct CorrelationGroupCandidateEvent {
+    event: CorrEvent,
+    step: Option<u32>,
+    step_label: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+struct CorrelationGroupCandidate {
+    group_key: String,
+    window_start_ts: i64,
+    window_end_ts: i64,
+    events: Vec<CorrelationGroupCandidateEvent>,
+}
+
+#[derive(Debug)]
+struct CorrelationEvalResult {
+    hits: usize,
+    events: Vec<Event>,
+    groups: Vec<DetectionCorrelationGroup>,
 }
 
 fn append_detection_filter_conditions(
@@ -1828,16 +1852,46 @@ fn to_corr_events(events: Vec<Event>) -> Vec<CorrEvent> {
     events
         .into_iter()
         .filter_map(|event| {
-            parse_event_timestamp(&event.timestamp).map(|ts| CorrEvent { event, ts })
+            parse_event_timestamp(&event.timestamp).map(|ts| CorrEvent {
+                event,
+                ts,
+                source_rule_ids: Vec::new(),
+            })
+        })
+        .collect()
+}
+
+fn to_corr_events_for_rule(events: Vec<Event>, rule_id: &str) -> Vec<CorrEvent> {
+    events
+        .into_iter()
+        .filter_map(|event| {
+            parse_event_timestamp(&event.timestamp).map(|ts| CorrEvent {
+                event,
+                ts,
+                source_rule_ids: vec![rule_id.to_string()],
+            })
         })
         .collect()
 }
 
 fn dedupe_corr_events(mut events: Vec<CorrEvent>) -> Vec<CorrEvent> {
-    let mut seen = HashSet::new();
-    events.retain(|item| seen.insert(item.event.id));
-    events.sort_by(|a, b| a.ts.cmp(&b.ts).then_with(|| a.event.id.cmp(&b.event.id)));
-    events
+    let mut merged: HashMap<i64, CorrEvent> = HashMap::new();
+
+    for mut item in events.drain(..) {
+        if let Some(existing) = merged.get_mut(&item.event.id) {
+            existing.source_rule_ids.append(&mut item.source_rule_ids);
+            existing.source_rule_ids.sort();
+            existing.source_rule_ids.dedup();
+            continue;
+        }
+        item.source_rule_ids.sort();
+        item.source_rule_ids.dedup();
+        merged.insert(item.event.id, item);
+    }
+
+    let mut deduped = merged.into_values().collect::<Vec<_>>();
+    deduped.sort_by(|a, b| a.ts.cmp(&b.ts).then_with(|| a.event.id.cmp(&b.event.id)));
+    deduped
 }
 
 fn build_correlation_result_events(mut events: Vec<CorrEvent>) -> Vec<Event> {
@@ -1849,6 +1903,146 @@ fn build_correlation_result_events(mut events: Vec<CorrEvent>) -> Vec<Event> {
         .take(DETECTION_UI_LIMIT)
         .map(|item| item.event)
         .collect()
+}
+
+fn rule_display_names_for_id(
+    rule_id: &str,
+    simple_rules_by_id: &HashMap<String, Vec<DetectionRule>>,
+) -> Vec<String> {
+    let mut names = simple_rules_by_id
+        .get(rule_id)
+        .into_iter()
+        .flat_map(|rules| rules.iter().map(|rule| rule.name.clone()))
+        .collect::<Vec<_>>();
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn build_sequence_step_label(
+    step: &CorrelationStep,
+    fallback_index: usize,
+    simple_rules_by_id: &HashMap<String, Vec<DetectionRule>>,
+) -> String {
+    if let Some(name) = step.name.as_ref().map(|v| v.trim()).filter(|v| !v.is_empty()) {
+        return name.to_string();
+    }
+
+    if let Some(rule_id) = step.rule_id.as_ref().map(|v| v.trim()).filter(|v| !v.is_empty()) {
+        let names = rule_display_names_for_id(rule_id, simple_rules_by_id);
+        if !names.is_empty() {
+            return names.join(" / ");
+        }
+        return format!("Referenced rule: {rule_id}");
+    }
+
+    if let Some(event_ids) = &step.event_id {
+        if !event_ids.is_empty() {
+            return format!(
+                "Event ID {}",
+                event_ids
+                    .iter()
+                    .map(|id| id.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+    }
+
+    format!("Step {}", step.step.unwrap_or((fallback_index + 1) as u32))
+}
+
+fn format_group_key_for_ui(group_key: &str) -> Option<String> {
+    if group_key == "__all__" {
+        return None;
+    }
+    Some(group_key.replace('\u{1f}', " | "))
+}
+
+fn finalize_correlation_result(
+    hits: usize,
+    mut groups: Vec<CorrelationGroupCandidate>,
+    simple_rules_by_id: &HashMap<String, Vec<DetectionRule>>,
+) -> CorrelationEvalResult {
+    groups.sort_by(|a, b| {
+        b.window_end_ts
+            .cmp(&a.window_end_ts)
+            .then_with(|| b.window_start_ts.cmp(&a.window_start_ts))
+    });
+
+    let mut limited_groups = Vec::new();
+    let mut total_group_events = 0usize;
+    for group in groups {
+        if !limited_groups.is_empty() && total_group_events + group.events.len() > DETECTION_UI_LIMIT {
+            break;
+        }
+        total_group_events += group.events.len();
+        limited_groups.push(group);
+    }
+
+    let flat_events = limited_groups
+        .iter()
+        .flat_map(|group| group.events.iter().map(|item| item.event.clone()))
+        .collect::<Vec<_>>();
+    let events = build_correlation_result_events(dedupe_corr_events(flat_events));
+
+    let groups = limited_groups
+        .into_iter()
+        .map(|mut group| {
+            group.events.sort_by(|a, b| {
+                a.step
+                    .unwrap_or(u32::MAX)
+                    .cmp(&b.step.unwrap_or(u32::MAX))
+                    .then_with(|| a.event.ts.cmp(&b.event.ts))
+                    .then_with(|| a.event.event.id.cmp(&b.event.event.id))
+            });
+
+            let window_start = group
+                .events
+                .iter()
+                .min_by_key(|item| item.event.ts)
+                .map(|item| item.event.event.timestamp.clone());
+            let window_end = group
+                .events
+                .iter()
+                .max_by_key(|item| item.event.ts)
+                .map(|item| item.event.event.timestamp.clone());
+
+            let events = group
+                .events
+                .into_iter()
+                .map(|item| {
+                    let mut matched_rule_ids = item.event.source_rule_ids;
+                    matched_rule_ids.sort();
+                    matched_rule_ids.dedup();
+
+                    let mut matched_rule_names = matched_rule_ids
+                        .iter()
+                        .flat_map(|rule_id| rule_display_names_for_id(rule_id, simple_rules_by_id))
+                        .collect::<Vec<_>>();
+                    matched_rule_names.sort();
+                    matched_rule_names.dedup();
+
+                    DetectionCorrelationGroupEvent {
+                        event: item.event.event,
+                        step: item.step,
+                        step_label: item.step_label,
+                        matched_rule_ids,
+                        matched_rule_names,
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            DetectionCorrelationGroup {
+                group_key: format_group_key_for_ui(&group.group_key),
+                window_start,
+                window_end,
+                events,
+            }
+        })
+        .collect::<Vec<_>>();
+
+    CorrelationEvalResult { hits, events, groups }
 }
 
 fn upper_bound_ts(events: &[CorrEvent], ts: i64) -> usize {
@@ -1906,7 +2100,7 @@ fn collect_rule_reference_events(
         for rule in rules {
             let filter = DetectionFilter::from_rule(rule);
             let queried = query_detection_events(conn, &filter, CORRELATION_SCAN_LIMIT, false)?;
-            events.extend(to_corr_events(queried));
+            events.extend(to_corr_events_for_rule(queried, &rule.id));
         }
     }
 
@@ -1946,12 +2140,20 @@ fn evaluate_sequence_correlation(
     cfg: &CorrelationConfig,
     simple_rules_by_id: &HashMap<String, Vec<DetectionRule>>,
     cache: &mut HashMap<String, Vec<CorrEvent>>,
-) -> Result<(usize, Vec<Event>), AppError> {
+) -> Result<CorrelationEvalResult, AppError> {
     let Some(steps) = &cfg.steps else {
-        return Ok((0, Vec::new()));
+        return Ok(CorrelationEvalResult {
+            hits: 0,
+            events: Vec::new(),
+            groups: Vec::new(),
+        });
     };
     if steps.is_empty() {
-        return Ok((0, Vec::new()));
+        return Ok(CorrelationEvalResult {
+            hits: 0,
+            events: Vec::new(),
+            groups: Vec::new(),
+        });
     }
 
     let mut indexed_steps: Vec<(usize, CorrelationStep)> = steps.iter().cloned().enumerate().collect();
@@ -1980,11 +2182,15 @@ fn evaluate_sequence_correlation(
     }
 
     let Some(first_grouped) = grouped_per_step.first() else {
-        return Ok((0, Vec::new()));
+        return Ok(CorrelationEvalResult {
+            hits: 0,
+            events: Vec::new(),
+            groups: Vec::new(),
+        });
     };
 
     let mut hits = 0usize;
-    let mut matched_events = Vec::new();
+    let mut matched_groups = Vec::new();
 
     for (group_key, first_step_events) in first_grouped {
         let mut cursor = 0usize;
@@ -1992,8 +2198,11 @@ fn evaluate_sequence_correlation(
             let anchor = &first_step_events[cursor];
             let window_end = anchor.ts + window_seconds;
             let first_need = ordered_steps[0].min_count.unwrap_or(1);
+            let first_step_number = ordered_steps[0].step.unwrap_or(1);
+            let first_step_label =
+                build_sequence_step_label(&ordered_steps[0], 0, simple_rules_by_id);
 
-            let Some((mut current_ts, mut chain_events)) =
+            let Some((mut current_ts, first_step_matches)) =
                 select_step_window(first_step_events, anchor.ts, window_end, first_need)
             else {
                 cursor += 1;
@@ -2001,6 +2210,14 @@ fn evaluate_sequence_correlation(
             };
 
             let first_step_end = current_ts;
+            let mut chain_events = first_step_matches
+                .into_iter()
+                .map(|event| CorrelationGroupCandidateEvent {
+                    event,
+                    step: Some(first_step_number),
+                    step_label: Some(first_step_label.clone()),
+                })
+                .collect::<Vec<_>>();
             let mut ok = true;
 
             for (step_index, step) in ordered_steps.iter().enumerate().skip(1) {
@@ -2016,12 +2233,24 @@ fn evaluate_sequence_correlation(
                     break;
                 };
                 current_ts = step_ts;
-                chain_events.extend(step_matches);
+                let step_number = step.step.unwrap_or((step_index + 1) as u32);
+                let step_label =
+                    build_sequence_step_label(step, step_index, simple_rules_by_id);
+                chain_events.extend(step_matches.into_iter().map(|event| CorrelationGroupCandidateEvent {
+                    event,
+                    step: Some(step_number),
+                    step_label: Some(step_label.clone()),
+                }));
             }
 
             if ok {
                 hits += 1;
-                matched_events.extend(chain_events);
+                matched_groups.push(CorrelationGroupCandidate {
+                    group_key: group_key.clone(),
+                    window_start_ts: anchor.ts,
+                    window_end_ts: current_ts,
+                    events: chain_events,
+                });
                 cursor = upper_bound_ts(first_step_events, first_step_end);
             } else {
                 cursor += 1;
@@ -2029,7 +2258,7 @@ fn evaluate_sequence_correlation(
         }
     }
 
-    Ok((hits, build_correlation_result_events(dedupe_corr_events(matched_events))))
+    Ok(finalize_correlation_result(hits, matched_groups, simple_rules_by_id))
 }
 
 fn evaluate_threshold_correlation(
@@ -2037,7 +2266,7 @@ fn evaluate_threshold_correlation(
     cfg: &CorrelationConfig,
     simple_rules_by_id: &HashMap<String, Vec<DetectionRule>>,
     cache: &mut HashMap<String, Vec<CorrEvent>>,
-) -> Result<(usize, Vec<Event>), AppError> {
+) -> Result<CorrelationEvalResult, AppError> {
     let window_seconds = cfg.window.unwrap_or(300).max(1);
     let min_count = cfg.min_count.unwrap_or(1).max(1);
     let group_by = cfg.group_by.clone().unwrap_or_default();
@@ -2056,7 +2285,11 @@ fn evaluate_threshold_correlation(
     } else {
         let filter = DetectionFilter::from_correlation(cfg);
         if !detection_filter_has_criteria(&filter) {
-            return Ok((0, Vec::new()));
+            return Ok(CorrelationEvalResult {
+                hits: 0,
+                events: Vec::new(),
+                groups: Vec::new(),
+            });
         }
         to_corr_events(query_detection_events(
             conn,
@@ -2068,7 +2301,11 @@ fn evaluate_threshold_correlation(
 
     base_events.retain(|event| matches_time_filter(event, cfg.time_filter.as_ref()));
     if base_events.is_empty() {
-        return Ok((0, Vec::new()));
+        return Ok(CorrelationEvalResult {
+            hits: 0,
+            events: Vec::new(),
+            groups: Vec::new(),
+        });
     }
 
     let mut grouped: HashMap<String, Vec<CorrEvent>> = HashMap::new();
@@ -2081,10 +2318,15 @@ fn evaluate_threshold_correlation(
     }
 
     let mut hits = 0usize;
-    let mut matched_events = Vec::new();
+    let mut matched_groups = Vec::new();
     let distinct_field = cfg.count_distinct.as_deref().map(str::trim).filter(|v| !v.is_empty());
+    let threshold_label = if distinct_field.is_some() {
+        "Distinct threshold member".to_string()
+    } else {
+        "Threshold member".to_string()
+    };
 
-    for events in grouped.values() {
+    for (group_key, events) in grouped.iter() {
         if let Some(field) = distinct_field {
             let mut window: VecDeque<(CorrEvent, String)> = VecDeque::new();
             let mut frequencies: HashMap<String, usize> = HashMap::new();
@@ -2113,7 +2355,22 @@ fn evaluate_threshold_correlation(
 
                 if frequencies.len() >= min_count {
                     hits += 1;
-                    matched_events.extend(window.iter().map(|(ev, _)| ev.clone()));
+                    let group_events = window
+                        .iter()
+                        .map(|(ev, _)| CorrelationGroupCandidateEvent {
+                            event: ev.clone(),
+                            step: None,
+                            step_label: Some(threshold_label.clone()),
+                        })
+                        .collect::<Vec<_>>();
+                    let window_start_ts =
+                        window.front().map(|(ev, _)| ev.ts).unwrap_or(event.ts);
+                    matched_groups.push(CorrelationGroupCandidate {
+                        group_key: group_key.clone(),
+                        window_start_ts,
+                        window_end_ts: event.ts,
+                        events: group_events,
+                    });
                     window.clear();
                     frequencies.clear();
                 }
@@ -2133,14 +2390,29 @@ fn evaluate_threshold_correlation(
 
                 if window.len() >= min_count {
                     hits += 1;
-                    matched_events.extend(window.iter().cloned());
+                    let group_events = window
+                        .iter()
+                        .cloned()
+                        .map(|ev| CorrelationGroupCandidateEvent {
+                            event: ev,
+                            step: None,
+                            step_label: Some(threshold_label.clone()),
+                        })
+                        .collect::<Vec<_>>();
+                    let window_start_ts = window.front().map(|ev| ev.ts).unwrap_or(event.ts);
+                    matched_groups.push(CorrelationGroupCandidate {
+                        group_key: group_key.clone(),
+                        window_start_ts,
+                        window_end_ts: event.ts,
+                        events: group_events,
+                    });
                     window.clear();
                 }
             }
         }
     }
 
-    Ok((hits, build_correlation_result_events(dedupe_corr_events(matched_events))))
+    Ok(finalize_correlation_result(hits, matched_groups, simple_rules_by_id))
 }
 
 pub fn run_detections(pool: &DbPool, rules_path: &Path) -> Result<Vec<DetectionMatch>, AppError> {
@@ -2197,7 +2469,7 @@ pub fn run_detections(pool: &DbPool, rules_path: &Path) -> Result<Vec<DetectionM
 
     for rule in rules {
         if let Some(cfg) = &rule.correlation {
-            let (hits, events) = match cfg.r#type.to_ascii_lowercase().as_str() {
+            let result = match cfg.r#type.to_ascii_lowercase().as_str() {
                 "sequence" => evaluate_sequence_correlation(
                     &conn,
                     cfg,
@@ -2210,17 +2482,31 @@ pub fn run_detections(pool: &DbPool, rules_path: &Path) -> Result<Vec<DetectionM
                     &simple_rules_by_id,
                     &mut reference_cache,
                 )?,
-                _ => (0, Vec::new()),
+                _ => CorrelationEvalResult {
+                    hits: 0,
+                    events: Vec::new(),
+                    groups: Vec::new(),
+                },
             };
 
-            results.push(DetectionMatch { rule, hits, events });
+            results.push(DetectionMatch {
+                rule,
+                hits: result.hits,
+                events: result.events,
+                correlation_groups: Some(result.groups),
+            });
             continue;
         }
 
         let filter = DetectionFilter::from_rule(&rule);
         let hits = count_detection_events(&conn, &filter)?;
         let events = query_detection_events(&conn, &filter, DETECTION_UI_LIMIT, true)?;
-        results.push(DetectionMatch { rule, hits, events });
+        results.push(DetectionMatch {
+            rule,
+            hits,
+            events,
+            correlation_groups: None,
+        });
     }
 
     results.sort_by(|a, b| {
@@ -2437,6 +2723,15 @@ mod tests {
         assert_eq!(res[0].hits, 1);
         assert_eq!(res[0].rule.id, "corr-seq");
         assert_eq!(res[0].events.len(), 2);
+        assert_eq!(res[0].correlation_groups.as_ref().map(|v| v.len()), Some(1));
+        assert_eq!(
+            res[0]
+                .correlation_groups
+                .as_ref()
+                .and_then(|v| v.first())
+                .map(|g| g.events.len()),
+            Some(2)
+        );
     }
 
     #[test]
@@ -2477,6 +2772,15 @@ mod tests {
         assert_eq!(res[0].hits, 1);
         assert_eq!(res[0].rule.id, "corr-threshold");
         assert_eq!(res[0].events.len(), 3);
+        assert_eq!(res[0].correlation_groups.as_ref().map(|v| v.len()), Some(1));
+        assert_eq!(
+            res[0]
+                .correlation_groups
+                .as_ref()
+                .and_then(|v| v.first())
+                .map(|g| g.events.len()),
+            Some(3)
+        );
     }
 
     #[test]

@@ -234,10 +234,28 @@ pub struct CorrelationTimeFilter {
 }
 
 #[derive(Debug, Serialize)]
+pub struct DetectionCorrelationGroupEvent {
+    pub event: Event,
+    pub step: Option<u32>,
+    pub step_label: Option<String>,
+    pub matched_rule_ids: Vec<String>,
+    pub matched_rule_names: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DetectionCorrelationGroup {
+    pub group_key: Option<String>,
+    pub window_start: Option<String>,
+    pub window_end: Option<String>,
+    pub events: Vec<DetectionCorrelationGroupEvent>,
+}
+
+#[derive(Debug, Serialize)]
 pub struct DetectionMatch {
     pub rule: DetectionRule,
     pub hits: usize,
     pub events: Vec<Event>,
+    pub correlation_groups: Option<Vec<DetectionCorrelationGroup>>,
 }
 
 #[derive(Debug, Deserialize)]
