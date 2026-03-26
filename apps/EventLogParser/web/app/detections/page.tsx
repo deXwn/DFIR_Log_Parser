@@ -87,6 +87,28 @@ function severityOrder(s?: string): number {
   }
 }
 
+function compareBySeverityThenHits(a: any, b: any): number {
+  const aHasHits = a.hits > 0;
+  const bHasHits = b.hits > 0;
+
+  if (aHasHits !== bHasHits) {
+    return aHasHits ? -1 : 1;
+  }
+
+  const severityDiff =
+    severityOrder(a.rule.severity) - severityOrder(b.rule.severity);
+  if (severityDiff !== 0) {
+    return severityDiff;
+  }
+
+  const hitsDiff = b.hits - a.hits;
+  if (hitsDiff !== 0) {
+    return hitsDiff;
+  }
+
+  return a.rule.name.localeCompare(b.rule.name);
+}
+
 function severityBadge(s?: string) {
   switch (s) {
     case "critical": return "badge badge-critical";
@@ -278,8 +300,7 @@ export default function DetectionsPage() {
 
     result.sort((a: any, b: any) => {
       if (sortMode === "severity") {
-        const diff = severityOrder(a.rule.severity) - severityOrder(b.rule.severity);
-        return diff !== 0 ? diff : b.hits - a.hits;
+        return compareBySeverityThenHits(a, b);
       }
       if (sortMode === "hits") return b.hits - a.hits;
       return a.rule.name.localeCompare(b.rule.name);
