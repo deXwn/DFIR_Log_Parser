@@ -9,6 +9,7 @@ const shortcuts: Record<string, string> = {
   gt: "/timeline",
   gs: "/stats",
   gq: "/search",
+  gf: "/forensics",
   gd: "/"
 };
 

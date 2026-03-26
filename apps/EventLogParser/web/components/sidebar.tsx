@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useForensicsStore } from "../hooks/useForensicsStore";
+import { useEffect } from "react";
 
 const links = [
   { href: "/", label: "Overview" },
@@ -11,12 +13,19 @@ const links = [
   { href: "/stats", label: "Statistics" },
   { href: "/timeline", label: "Timeline" },
   { href: "/search", label: "Search" },
+  { href: "/forensics", label: "Forensics" },
   { href: "/report", label: "Report" },
   { href: "/detections", label: "Detections" }
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const forensicsCount = useForensicsStore((s) => s.items.length);
+  const fetchForensics = useForensicsStore((s) => s.fetch);
+
+  useEffect(() => {
+    fetchForensics();
+  }, [fetchForensics]);
 
   return (
     <aside className="sticky top-0 hidden h-screen w-80 flex-col border-r border-slate-800/70 bg-[rgba(5,10,18,0.82)] p-4 backdrop-blur-xl md:flex">
@@ -32,6 +41,7 @@ export default function Sidebar() {
       <nav className="mt-5 flex-1 space-y-2">
         {links.map((link, idx) => {
           const active = pathname === link.href;
+          const isForensics = link.href === "/forensics";
           return (
             <Link
               key={link.href}
@@ -52,6 +62,11 @@ export default function Sidebar() {
                 {idx + 1}
               </span>
               <span className="min-w-0 flex-1 truncate">{link.label}</span>
+              {isForensics && forensicsCount > 0 && (
+                <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent/25 px-1.5 text-[10px] font-bold text-orange-100 border border-accent/40">
+                  {forensicsCount}
+                </span>
+              )}
             </Link>
           );
         })}

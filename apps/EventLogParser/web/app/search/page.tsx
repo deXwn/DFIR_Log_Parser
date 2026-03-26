@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useApi } from "../../hooks/useApi";
 import { Card } from "../../ui/card";
+import { useForensicsStore } from "../../hooks/useForensicsStore";
 
 export default function SearchPage() {
   const [term, setTerm] = useState("failed logon");
   const [logonType, setLogonType] = useState<string>("");
   const [ip, setIp] = useState<string>("");
   const [exclude, setExclude] = useState<string>("");
+  const { addWithEvent: addToForensics, has: hasInForensics } = useForensicsStore();
   const { data, isFetching, refetch, error } = useApi<any>(
     ["search", term, logonType, ip, exclude],
     () =>
@@ -100,7 +102,24 @@ export default function SearchPage() {
               className="glass p-4 border border-slate-800/60 rounded-2xl group"
             >
               <summary className="cursor-pointer space-y-1">
-                <div className="text-xs text-muted mb-1">{ev.timestamp}</div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted mb-1">{ev.timestamp}</div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!hasInForensics(ev.id)) addToForensics(ev);
+                    }}
+                    disabled={hasInForensics(ev.id)}
+                    className={`rounded-lg border px-2 py-1 text-[11px] font-semibold transition ${
+                      hasInForensics(ev.id)
+                        ? "border-green-700/40 text-green-300 cursor-not-allowed"
+                        : "border-accent/40 text-orange-100 hover:bg-accent/15"
+                    }`}
+                  >
+                    {hasInForensics(ev.id) ? "In Forensics" : "+ Forensics"}
+                  </button>
+                </div>
                 <div className="flex items-center gap-2 text-sm font-semibold flex-wrap">
                   <span className="badge badge-accent">{ev.event_id}</span>
                   <span className="badge badge-muted">{ev.channel}</span>

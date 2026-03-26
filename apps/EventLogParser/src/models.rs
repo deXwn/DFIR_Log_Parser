@@ -355,3 +355,47 @@ pub struct CorrelatedLogon {
     pub failures: i64,
     pub successes: i64,
 }
+
+// ── Forensics (Evidence Collection) ──
+
+#[derive(Debug, Deserialize)]
+pub struct ForensicItemCreate {
+    pub event_id: i64,
+    pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub severity: Option<String>,
+    pub mitre_tactic: Option<String>,
+    pub mitre_technique_id: Option<String>,
+    pub mitre_technique_name: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ForensicItemUpdate {
+    pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub severity: Option<String>,
+    pub mitre_tactic: Option<String>,
+    pub mitre_technique_id: Option<String>,
+    pub mitre_technique_name: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ForensicItem {
+    pub id: i64,
+    pub event_id: i64,
+    pub notes: String,
+    pub tags: Vec<String>,
+    pub severity: String,
+    pub mitre_tactic: String,
+    pub mitre_technique_id: String,
+    pub mitre_technique_name: String,
+    pub created_at: String,
+    pub event: Option<Event>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ForensicStats {
+    pub total: i64,
+    pub by_severity: Vec<CountEntry<String>>,
+    pub by_tactic: Vec<CountEntry<String>>,
+}

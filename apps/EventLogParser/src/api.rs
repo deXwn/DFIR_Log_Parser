@@ -6,6 +6,7 @@ use crate::models::{
     ListEvtxFile, ListEvtxRequest, ListEvtxResponse, Paginated, ReportRequest, ReportResponse, SearchQuery,
     StatsResponse, SuspiciousEvent, TimelineBucket, TimelineQuery, DeleteRequest, DeleteResponse,
     DetectionMatch, CustomReportRequest, CustomReportResponse, CustomReportHtmlResponse,
+    ForensicItem, ForensicItemCreate, ForensicItemUpdate, ForensicStats,
 };
 use crate::state::AppState;
 use crate::stats_query::StatsQuery;
@@ -39,6 +40,10 @@ pub fn router(state: AppState) -> Router {
         .route("/reports/custom", post(custom_report_handler))
         .route("/processes", get(processes_handler))
         .route("/detections", get(detections_handler))
+        .route("/forensics", get(list_forensics_handler).post(add_forensic_handler))
+        .route("/forensics/stats", get(forensics_stats_handler))
+        .route("/forensics/clear", post(clear_forensics_handler))
+        .route("/forensics/:id", get(get_forensic_handler).put(update_forensic_handler).delete(delete_forensic_handler))
         .with_state(state)
 }
 
@@ -408,6 +413,84 @@ async fn correlate_handler(
         limit,
         offset,
     }))
+}
+
+// ── Forensics Handlers ──
+
+async fn list_forensics_handler(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<ForensicItem>>, AppError> {
+    let pool = state.db.clone();
+    let items = task::spawn_blocking(move || db::list_forensic_items(&pool))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(items))
+}
+
+async fn add_forensic_handler(
+    State(state): State<AppState>,
+    Json(body): Json<ForensicItemCreate>,
+) -> Result<Json<ForensicItem>, AppError> {
+    let pool = state.db.clone();
+    let item = task::spawn_blocking(move || db::add_forensic_item(&pool, &body))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(item))
+}
+
+async fn get_forensic_handler(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Json<ForensicItem>, AppError> {
+    let pool = state.db.clone();
+    let conn = pool.get()?;
+    let item = task::spawn_blocking(move || db::get_forensic_item_by_id(&conn, id, &pool))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(item))
+}
+
+async fn update_forensic_handler(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Json(body): Json<ForensicItemUpdate>,
+) -> Result<Json<ForensicItem>, AppError> {
+    let pool = state.db.clone();
+    let item = task::spawn_blocking(move || db::update_forensic_item(&pool, id, &body))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(item))
+}
+
+async fn delete_forensic_handler(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let pool = state.db.clone();
+    let deleted = task::spawn_blocking(move || db::delete_forensic_item(&pool, id))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(serde_json::json!({ "deleted": deleted })))
+}
+
+async fn clear_forensics_handler(
+    State(state): State<AppState>,
+) -> Result<Json<serde_json::Value>, AppError> {
+    let pool = state.db.clone();
+    let count = task::spawn_blocking(move || db::clear_forensic_items(&pool))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(serde_json::json!({ "deleted": count })))
+}
+
+async fn forensics_stats_handler(
+    State(state): State<AppState>,
+) -> Result<Json<ForensicStats>, AppError> {
+    let pool = state.db.clone();
+    let stats = task::spawn_blocking(move || db::forensic_stats(&pool))
+        .await
+        .map_err(|e| AppError::Join(e.to_string()))??;
+    Ok(Json(stats))
 }
 
 fn parse_ts(ts: &str) -> Result<String, AppError> {

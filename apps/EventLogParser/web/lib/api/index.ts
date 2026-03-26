@@ -54,5 +54,17 @@ export const api = {
   deleteEvents: (body: any) => api.post<{ deleted: number }>("/delete", body),
   report: (body: any) => api.post("/report", body),
   customReport: (body: any) => api.post("/reports/custom", body),
-  customReportHtml: (body: any) => api.post("/reports/custom/html", body)
+  customReportHtml: (body: any) => api.post("/reports/custom/html", body),
+  // Forensics
+  forensics: () => api.get<any[]>("/forensics"),
+  forensicStats: () => api.get<any>("/forensics/stats"),
+  addForensic: (body: any) => api.post<any>("/forensics", body),
+  updateForensic: (id: number, body: any) =>
+    request<any>(buildUrl(`/forensics/${id}`), {
+      method: "PUT",
+      body: JSON.stringify(body)
+    }),
+  deleteForensic: (id: number) =>
+    request<any>(buildUrl(`/forensics/${id}`), { method: "DELETE" }),
+  clearForensics: () => api.post<any>("/forensics/clear")
 };

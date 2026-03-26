@@ -2817,6 +2817,181 @@ mod tests {
     }
 }
 
+// ── Forensics (Evidence Collection) ──
+
+pub fn add_forensic_item(
+    pool: &DbPool,
+    req: &crate::models::ForensicItemCreate,
+) -> Result<crate::models::ForensicItem, AppError> {
+    let conn = pool.get()?;
+    let tags_json = serde_json::to_string(&req.tags.clone().unwrap_or_default())?;
+    let severity = req.severity.clone().unwrap_or_else(|| "medium".to_string());
+    let mitre_tactic = req.mitre_tactic.clone().unwrap_or_default();
+    let mitre_technique_id = req.mitre_technique_id.clone().unwrap_or_default();
+    let mitre_technique_name = req.mitre_technique_name.clone().unwrap_or_default();
+    let notes = req.notes.clone().unwrap_or_default();
+
+    conn.execute(
+        "INSERT INTO forensic_items (event_id, notes, tags, severity, mitre_tactic, mitre_technique_id, mitre_technique_name)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![req.event_id, notes, tags_json, severity, mitre_tactic, mitre_technique_id, mitre_technique_name],
+    )?;
+
+    let id = conn.last_insert_rowid();
+    get_forensic_item_by_id(&conn, id, pool)
+}
+
+pub fn get_forensic_item_by_id(
+    conn: &rusqlite::Connection,
+    id: i64,
+    pool: &DbPool,
+) -> Result<crate::models::ForensicItem, AppError> {
+    let item = conn.query_row(
+        "SELECT id, event_id, notes, tags, severity, mitre_tactic, mitre_technique_id, mitre_technique_name, created_at
+         FROM forensic_items WHERE id = ?1",
+        params![id],
+        |row| {
+            Ok(crate::models::ForensicItem {
+                id: row.get(0)?,
+                event_id: row.get(1)?,
+                notes: row.get(2)?,
+                tags: serde_json::from_str::<Vec<String>>(&row.get::<_, String>(3)?).unwrap_or_default(),
+                severity: row.get(4)?,
+                mitre_tactic: row.get(5)?,
+                mitre_technique_id: row.get(6)?,
+                mitre_technique_name: row.get(7)?,
+                created_at: row.get(8)?,
+                event: None,
+            })
+        },
+    )?;
+    // attach event
+    let event = get_event(pool, item.event_id).ok();
+    Ok(crate::models::ForensicItem { event, ..item })
+}
+
+pub fn list_forensic_items(pool: &DbPool) -> Result<Vec<crate::models::ForensicItem>, AppError> {
+    let conn = pool.get()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, event_id, notes, tags, severity, mitre_tactic, mitre_technique_id, mitre_technique_name, created_at
+         FROM forensic_items ORDER BY created_at DESC",
+    )?;
+
+    let rows = stmt.query_map([], |row| {
+        Ok(crate::models::ForensicItem {
+            id: row.get(0)?,
+            event_id: row.get(1)?,
+            notes: row.get(2)?,
+            tags: serde_json::from_str::<Vec<String>>(&row.get::<_, String>(3)?).unwrap_or_default(),
+            severity: row.get(4)?,
+            mitre_tactic: row.get(5)?,
+            mitre_technique_id: row.get(6)?,
+            mitre_technique_name: row.get(7)?,
+            created_at: row.get(8)?,
+            event: None,
+        })
+    })?;
+
+    let mut items = Vec::new();
+    for row in rows {
+        let item = row?;
+        let event = get_event(pool, item.event_id).ok();
+        items.push(crate::models::ForensicItem { event, ..item });
+    }
+    Ok(items)
+}
+
+pub fn update_forensic_item(
+    pool: &DbPool,
+    id: i64,
+    req: &crate::models::ForensicItemUpdate,
+) -> Result<crate::models::ForensicItem, AppError> {
+    let conn = pool.get()?;
+
+    // Check exists
+    let exists: bool = conn.query_row(
+        "SELECT COUNT(*) FROM forensic_items WHERE id = ?1",
+        params![id],
+        |row| row.get::<_, i64>(0).map(|c| c > 0),
+    )?;
+    if !exists {
+        return Err(AppError::NotFound(format!("forensic item {id} not found")));
+    }
+
+    if let Some(ref notes) = req.notes {
+        conn.execute("UPDATE forensic_items SET notes = ?1 WHERE id = ?2", params![notes, id])?;
+    }
+    if let Some(ref tags) = req.tags {
+        let tags_json = serde_json::to_string(tags)?;
+        conn.execute("UPDATE forensic_items SET tags = ?1 WHERE id = ?2", params![tags_json, id])?;
+    }
+    if let Some(ref severity) = req.severity {
+        conn.execute("UPDATE forensic_items SET severity = ?1 WHERE id = ?2", params![severity, id])?;
+    }
+    if let Some(ref tactic) = req.mitre_tactic {
+        conn.execute("UPDATE forensic_items SET mitre_tactic = ?1 WHERE id = ?2", params![tactic, id])?;
+    }
+    if let Some(ref tech_id) = req.mitre_technique_id {
+        conn.execute("UPDATE forensic_items SET mitre_technique_id = ?1 WHERE id = ?2", params![tech_id, id])?;
+    }
+    if let Some(ref tech_name) = req.mitre_technique_name {
+        conn.execute("UPDATE forensic_items SET mitre_technique_name = ?1 WHERE id = ?2", params![tech_name, id])?;
+    }
+
+    get_forensic_item_by_id(&conn, id, pool)
+}
+
+pub fn delete_forensic_item(pool: &DbPool, id: i64) -> Result<bool, AppError> {
+    let conn = pool.get()?;
+    let deleted = conn.execute("DELETE FROM forensic_items WHERE id = ?1", params![id])?;
+    Ok(deleted > 0)
+}
+
+pub fn clear_forensic_items(pool: &DbPool) -> Result<usize, AppError> {
+    let conn = pool.get()?;
+    let deleted = conn.execute("DELETE FROM forensic_items", [])?;
+    Ok(deleted)
+}
+
+pub fn forensic_stats(pool: &DbPool) -> Result<crate::models::ForensicStats, AppError> {
+    let conn = pool.get()?;
+    let total: i64 = conn.query_row("SELECT COUNT(*) FROM forensic_items", [], |r| r.get(0))?;
+
+    let mut by_severity = Vec::new();
+    {
+        let mut stmt = conn.prepare(
+            "SELECT severity, COUNT(*) as cnt FROM forensic_items WHERE severity != '' GROUP BY severity ORDER BY cnt DESC",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(crate::models::CountEntry {
+                key: row.get::<_, String>(0)?,
+                count: row.get(1)?,
+            })
+        })?;
+        for row in rows {
+            by_severity.push(row?);
+        }
+    }
+
+    let mut by_tactic = Vec::new();
+    {
+        let mut stmt = conn.prepare(
+            "SELECT mitre_tactic, COUNT(*) as cnt FROM forensic_items WHERE mitre_tactic != '' GROUP BY mitre_tactic ORDER BY cnt DESC",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(crate::models::CountEntry {
+                key: row.get::<_, String>(0)?,
+                count: row.get(1)?,
+            })
+        })?;
+        for row in rows {
+            by_tactic.push(row?);
+        }
+    }
+
+    Ok(crate::models::ForensicStats { total, by_severity, by_tactic })
+}
+
 fn run_migrations(pool: &DbPool) -> Result<(), AppError> {
     const MIGRATIONS: &[(u32, &str)] = &[
         (
@@ -2891,6 +3066,24 @@ fn run_migrations(pool: &DbPool) -> Result<(), AppError> {
                     json_extract(event_data_json, '$.Event.System.TimeCreated."@SystemTime"')
                 ) IS NOT NULL;
             "##,
+        ),
+        (
+            5,
+            r#"
+            CREATE TABLE IF NOT EXISTS forensic_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id INTEGER NOT NULL,
+                notes TEXT NOT NULL DEFAULT '',
+                tags TEXT NOT NULL DEFAULT '[]',
+                severity TEXT NOT NULL DEFAULT 'medium',
+                mitre_tactic TEXT NOT NULL DEFAULT '',
+                mitre_technique_id TEXT NOT NULL DEFAULT '',
+                mitre_technique_name TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_forensic_event_id ON forensic_items(event_id);
+            CREATE INDEX IF NOT EXISTS idx_forensic_severity ON forensic_items(severity);
+            "#,
         ),
     ];
 

@@ -8,6 +8,8 @@ import { Drawer } from "../ui/drawer";
 import { api } from "../lib/api";
 import { EventFilters } from "./event-filters";
 import { Card } from "../ui/card";
+import { EventContextMenu } from "./context-menu";
+import { useForensicsStore } from "../hooks/useForensicsStore";
 
 const PAGE_SIZE = 500;
 const CRITICAL_EVENT_IDS = new Set([
@@ -134,6 +136,12 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
     left: number;
     top: number;
   } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    event: any;
+  } | null>(null);
+  const { addWithEvent: addToForensics, has: hasInForensics } = useForensicsStore();
 
   const queryFilters = useMemo(() => filters, [filters]);
 
@@ -186,6 +194,20 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         closeDetail();
+        setContextMenu(null);
+        return;
+      }
+      if (
+        (e.key === "f" || e.key === "F") &&
+        selected >= 0 &&
+        items[selected] &&
+        !(e.target as HTMLElement)?.closest("input,textarea,select")
+      ) {
+        e.preventDefault();
+        const ev = items[selected];
+        if (!hasInForensics(ev.id)) {
+          addToForensics(ev);
+        }
         return;
       }
       if (!["ArrowDown", "ArrowUp", "Enter"].includes(e.key) || items.length === 0)
@@ -266,6 +288,12 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
                     const sameEvent = detail === event;
                     setSelected(sameEvent ? -1 : virtualRow.index);
                     setDetail(sameEvent ? null : event);
+                  }}
+                  onContextMenu={(e) => {
+                    if (!event) return;
+                    e.preventDefault();
+                    setSelected(virtualRow.index);
+                    setContextMenu({ x: e.clientX, y: e.clientY, event });
                   }}
                   className={`absolute left-0 right-0 cursor-pointer border-b border-black/30 px-3 py-2 transition ${
                     selected === virtualRow.index
@@ -363,12 +391,27 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
                 </div>
                 <div className="mt-1 text-xs text-muted">{detail.timestamp}</div>
               </div>
-              <button
-                onClick={closeDetail}
-                className="rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-accent/35 hover:text-white"
-              >
-                Back to results
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (!hasInForensics(detail.id)) addToForensics(detail);
+                  }}
+                  disabled={hasInForensics(detail.id)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                    hasInForensics(detail.id)
+                      ? "border-green-700/40 bg-green-950/30 text-green-300 cursor-not-allowed"
+                      : "border-accent/40 bg-accent/10 text-orange-100 hover:bg-accent/20"
+                  }`}
+                >
+                  {hasInForensics(detail.id) ? "In Forensics" : "+ Forensics"}
+                </button>
+                <button
+                  onClick={closeDetail}
+                  className="rounded-lg border border-slate-700/70 bg-slate-950/50 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-accent/35 hover:text-white"
+                >
+                  Back to results
+                </button>
+              </div>
             </div>
             <div className="mt-3 text-sm text-slate-300">{eventIdSummary(detail)}</div>
           </div>
@@ -453,6 +496,14 @@ export default function EventTable({ filters }: { filters: EventFilters }) {
         </Drawer>
       </div>
       {eventPopupPortal}
+      {contextMenu && (
+        <EventContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          event={contextMenu.event}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </Card>
   );
 }
